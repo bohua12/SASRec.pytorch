@@ -8,6 +8,9 @@ This repo my attempt to improve on the [pytorch implementation](https://github.c
 ⏳ **More Frequent Validation** – Reduced validation frequency from 20 to a default 5, making training feedback more responsive. This can be adjusted via a new hyperparameter ```weight_decay```
 
 ## 🚧 In Progress:
+
+📦 **Replaced WrapSampler with DataLoader** – Switched to PyTorch’s DataLoader to load and process batch data more efficiently.
+
 🔄 **Updated Validation** – Improved the validation strategy for better model assessment.
 
 🎛 **Hyperparameter Tuning** – Optimize model performance.
@@ -15,6 +18,7 @@ This repo my attempt to improve on the [pytorch implementation](https://github.c
 ⏹ **Early Stopping** – Stop the model when overfitting is detected, to prevent unnecessary overfitting and save computation time.
 
 📊 **Model Evaluation** – Evaluation metrics for better insights and comparison of model performance.
+
 
 ## 📜 Taken from the [pytorch implementation](https://github.com/pmixer/SASRec.pytorch)
 This repository enhances the previous PyTorch implementation (pmixer/SASRec.pytorch) with the following improvements:
