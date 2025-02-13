@@ -1,5 +1,14 @@
-modified based on [paper author's tensorflow implementation](https://github.com/kang205/SASRec), switching to PyTorch(v1.6) for simplicity, fixed issues like positional embedding usage etc. (making it harder to overfit, except for that, in recsys, personalization=overfitting sometimes)
+## 📌 Introduction
+This repo my attempt to improve on the [pytorch implementation](https://github.com/pmixer/SASRec.pytorch), which itself is modified based on the [paper author's tensorflow implementation](https://github.com/kang205/SASRec). The incumbent switches to PyTorch(v1.6) for simplicity, fixed issues like positional embedding usage etc. (making it harder to overfit, except for that, in recsys, personalization=overfitting sometimes)
 
+## 🔥 What's New in This Version?
+
+🏋️ **Added Weight Decay** – Introduced for better regularization, with a default 1e-3. This can be adjusteted via a new hyperparameter ```verification_frequency```
+
+⏳ **More Frequent Validation** – Reduced validation frequency from 20 to a default 5, making training feedback more responsive. This can be adjusted via a new hyperparameter ```weight_decay```
+
+## 📜 Taken from the [pytorch implementation](https://github.com/pmixer/SASRec.pytorch)
+This repository enhances the previous PyTorch implementation (pmixer/SASRec.pytorch) with the following improvements:
 to train:
 
 ```
