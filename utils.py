@@ -1,10 +1,10 @@
 import sys
 import copy
-import torch
 import random
 import numpy as np
 from collections import defaultdict
-from multiprocessing import Process, Queue
+from torch.utils.data import Dataset
+
 
 """ User-item indexing"""
 """ u2i_index: All items interacted by user u"""
@@ -32,71 +32,46 @@ def random_neq(l, r, s):
         t = np.random.randint(l, r)
     return t
 
+""" Standard implementation of abstract class Dataset, to be instantiated and used with DataLoader class"""
+class SASRecDataset(Dataset):
+    def __init__(self, user_train, usernum, itemnum, maxlen):
+        self.user_train = user_train
+        self.usernum = usernum
+        self.itemnum = itemnum
+        self.maxlen = maxlen
+        self.users = list(user_train.keys())
+    
+    def __len__(self):
+        return len(self.users)
+    
+    def __getitem__(self, idx):
+        # Gets uid of current indexed user
+        uid = self.users[idx]
+        # Initialise empty arrays of len(maxlen)
+        seq = np.zeros([self.maxlen], dtype=np.int32)
+        pos = np.zeros([self.maxlen], dtype=np.int32)
+        neg = np.zeros([self.maxlen], dtype=np.int32) # Randomly sampled incorrect item (-ve sample)
+        nxt = self.user_train[uid][-1]
+        idx = self.maxlen - 1
 
-def sample_function(user_train, usernum, itemnum, batch_size, maxlen, result_queue, SEED):
-    def sample(uid):
-
-        # uid = np.random.randint(1, usernum + 1)
-        while len(user_train[uid]) <= 1: uid = np.random.randint(1, usernum + 1)
-
-        seq = np.zeros([maxlen], dtype=np.int32)
-        pos = np.zeros([maxlen], dtype=np.int32)
-        neg = np.zeros([maxlen], dtype=np.int32)
-        nxt = user_train[uid][-1]
-        idx = maxlen - 1
-
-        ts = set(user_train[uid])
-        for i in reversed(user_train[uid][:-1]):
+        # Set of ALL items users[idx] have interacted with
+        ts = set(self.user_train[uid])
+        # Reason1 it is reversed: 0-Padding concept
+        # Reason2 it is reversed: Fill in rightmost, latest ones first, and earliest interactions past maxLen are dropped
+        for i in reversed(self.user_train[uid][:-1]):
             seq[idx] = i
             pos[idx] = nxt
-            if nxt != 0: neg[idx] = random_neq(1, itemnum + 1, ts)
+            # As long as nxt is a valid item (ie. not "0" padding), we can generate a negative item
+            # By choosing any item not in ts
+            if nxt != 0:
+                neg[idx] = random_neq(1, self.itemnum + 1, ts)
             nxt = i
             idx -= 1
-            if idx == -1: break
+            if idx == -1:
+                break
 
-        return (uid, seq, pos, neg)
+        return uid, seq, pos, neg
 
-    np.random.seed(SEED)
-    uids = np.arange(1, usernum+1, dtype=np.int32)
-    counter = 0
-    while True:
-        if counter % usernum == 0:
-            np.random.shuffle(uids)
-        one_batch = []
-        for i in range(batch_size):
-            one_batch.append(sample(uids[counter % usernum]))
-            counter += 1
-        result_queue.put(zip(*one_batch))
-
-
-""" Do multiprocessing things"""
-class WarpSampler(object):
-    def __init__(self, User, usernum, itemnum, batch_size=64, maxlen=10, n_workers=1):
-        self.result_queue = Queue(maxsize=n_workers * 10)
-        self.processors = []
-        for i in range(n_workers):
-            self.processors.append(
-                Process(target=sample_function, args=(User,
-                                                      usernum,
-                                                      itemnum,
-                                                      batch_size,
-                                                      maxlen,
-                                                      self.result_queue,
-                                                      np.random.randint(2e9)
-                                                      )))
-            self.processors[-1].daemon = True
-            self.processors[-1].start()
-
-    def next_batch(self):
-        return self.result_queue.get()
-
-    def close(self):
-        for p in self.processors:
-            p.terminate()
-            p.join()
-
-
-# train/val/test data generation
 """Simple, split into train/test/valid"""
 def data_partition(fname):
     usernum = 0

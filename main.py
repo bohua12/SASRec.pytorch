@@ -2,6 +2,7 @@ import os
 import time
 import torch
 import argparse
+from torch.utils.data import DataLoader
 
 from model import SASRec
 from utils import *
@@ -48,7 +49,6 @@ if __name__ == '__main__':
     ## and also the number of user and item we're concerned
     dataset = data_partition(args.dataset)
     [user_train, user_valid, user_test, usernum, itemnum] = dataset
-    # num_batch = len(user_train) // args.batch_size # tail? + ((len(user_train) % args.batch_size) != 0)
     num_batch = (len(user_train) - 1) // args.batch_size + 1
 
     ## Calculae Avg sequence length
@@ -61,8 +61,9 @@ if __name__ == '__main__':
     f = open(os.path.join(args.dataset + '_' + args.train_dir, 'log.txt'), 'w')
     f.write('epoch (val_ndcg, val_hr) (test_ndcg, test_hr)\n')
     
-    ## Not sure what is this? To generate training batches? (Even so idk what the hell that means haha)
-    sampler = WarpSampler(user_train, usernum, itemnum, batch_size=args.batch_size, maxlen=args.maxlen, n_workers=3)
+    # Set up dataset and dataloader
+    ds = SASRecDataset(user_train, usernum, itemnum, args.maxlen)
+    dataloader = DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     ## Generate instance of the SASRec model
     model = SASRec(usernum, itemnum, args).to(args.device) # no ReLU activation in original SASRec implementation?
@@ -118,7 +119,7 @@ if __name__ == '__main__':
 
     ## Use Adam Optimizer with weight decay (updated implementation)
     adam_optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
-    # Use adam optimizer without weight decay (original implementation)
+    ## Use adam optimizer without weight decay (original implementation)
     #adam_optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.98))
 
     best_val_ndcg, best_val_hr = 0.0, 0.0
@@ -133,16 +134,12 @@ if __name__ == '__main__':
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
         ## TODO: qn: Was wodnering why not just cut off code at ~line 100 if we are just gunna break everything here?
         if args.inference_only: break # just to decrease identition
+        print("========== Epoch ", epoch, " ==========")
 
-
-        for step in range(num_batch): # tqdm(range(num_batch), total=num_batch, ncols=70, leave=False, unit='b'):
-
-            ## Not sure where this is mentioned in the paper...
-            u, seq, pos, neg = sampler.next_batch() # tuples to ndarray
-            u, seq, pos, neg = np.array(u), np.array(seq), np.array(pos), np.array(neg)
+        for step, (u, seq, pos, neg) in enumerate(dataloader):
+            u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
             pos_logits, neg_logits = model(u, seq, pos, neg)
             pos_labels, neg_labels = torch.ones(pos_logits.shape, device=args.device), torch.zeros(neg_logits.shape, device=args.device)
-            print("Epoch ", epoch)
 
             ## Ok use the adam for network tuning, tune hyperparams
             adam_optimizer.zero_grad()
@@ -158,29 +155,25 @@ if __name__ == '__main__':
             ## QT: backward() is runnign in C++ and CUDA so i cannot click inside; Idea is based on dynamic graph. Only very high level PHD need do
             loss.backward()
 
-            ## Whats this for?
             adam_optimizer.step()
             print("loss in epoch {} iteration {}: {}".format(epoch, step, loss.item())) # expected 0.4~0.6 after init few epochs
 
         ## Every 5 (by default) epoch, evaluate and save the model
-        ## TODO: Qn: ACtl right what exactly does evaluating the model mean hahah
         if epoch % args.verification_frequency == 0:
             ## Toggle model to eval mode (part of pytorch implementation)
-            ## TODO: qn: Tbh dont get what exactly it does
             model.eval()
-            
-            ## Calculate total and current time (for this cuurrent batch of 20 epoch)
+
+            ## Calculate total and current time (for this cuurrent batch of x epoch)
             t1 = time.time() - t0
             T += t1
             print('Evaluating', end='')
             ## Eval test and validation performance
-            ## TODO: Read up what the eval does! ANd link to the paper
             t_test = evaluate(model, dataset, args)
             t_valid = evaluate_valid(model, dataset, args)
             print('epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
                     % (epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
 
-            ## Save model if ANY 4 of the metrics improve
+            ## Save model if ANY 4 of the metrics improve (TODO: Change!)
             if t_valid[0] > best_val_ndcg or t_valid[1] > best_val_hr or t_test[0] > best_test_ndcg or t_test[1] > best_test_hr:
                 best_val_ndcg = max(t_valid[0], best_val_ndcg)
                 best_val_hr = max(t_valid[1], best_val_hr)
@@ -194,18 +187,17 @@ if __name__ == '__main__':
             ## Log results in log.txt
             f.write(str(epoch) + ' ' + str(t_valid) + ' ' + str(t_test) + '\n')
             f.flush()
-            ## Reset timer for next itr of 20 epochs
+            ## Reset timer for next itr of x epochs
             t0 = time.time()
             ## Toggle model back to Training mode (part of pytorch module.py)
             model.train()
-    
+            
         # Close and save once reach desired number of epochs
         if epoch == args.num_epochs:
             folder = args.dataset + '_' + args.train_dir
             fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
             fname = fname.format(args.num_epochs, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
             torch.save(model.state_dict(), os.path.join(folder, fname))
-    
+
     f.close()
-    sampler.close()
     print("Done")
