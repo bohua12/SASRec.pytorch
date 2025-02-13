@@ -28,6 +28,8 @@ parser.add_argument('--device', default='cuda', type=str)
 parser.add_argument('--inference_only', default=False, type=str2bool)
 parser.add_argument('--state_dict_path', default=None, type=str)
 parser.add_argument('--weight_decay', default=1e-3, type=float)
+parser.add_argument('--verification_frequency', default=5, type=int)
+
 
 # Create Training Directory
 args = parser.parse_args()
@@ -113,8 +115,11 @@ if __name__ == '__main__':
     ## Use Binary Cross Entropy as objective function 
     bce_criterion = torch.nn.BCEWithLogitsLoss() # torch.nn.BCELoss()
     ## (Mentioned in III.E:Network Tuning)
-    ## Use Adam Optimizerr 
-    adam_optimizer = torch.optim.adamw(model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
+
+    ## Use Adam Optimizer with weight decay (updated implementation)
+    adam_optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
+    # Use adam optimizer without weight decay (original implementation)
+    #adam_optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.98))
 
     best_val_ndcg, best_val_hr = 0.0, 0.0
     best_test_ndcg, best_test_hr = 0.0, 0.0
@@ -157,9 +162,9 @@ if __name__ == '__main__':
             adam_optimizer.step()
             print("loss in epoch {} iteration {}: {}".format(epoch, step, loss.item())) # expected 0.4~0.6 after init few epochs
 
-        ## Every 20 epoch, evaluate and save the model
+        ## Every 5 (by default) epoch, evaluate and save the model
         ## TODO: Qn: ACtl right what exactly does evaluating the model mean hahah
-        if epoch % 20 == 0:
+        if epoch % args.verification_frequency == 0:
             ## Toggle model to eval mode (part of pytorch implementation)
             ## TODO: qn: Tbh dont get what exactly it does
             model.eval()
