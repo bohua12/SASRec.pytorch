@@ -9,7 +9,7 @@ This repo my attempt to improve on the [pytorch implementation](https://github.c
 
 ## 🚧 In Progress:
 
-📦 **Using DataLoader** – Switched to PyTorch’s DataLoader for more efficient data batching and loading.
+📦 **Replaced WrapSampler with DataLoader** – Switched to PyTorch’s DataLoader to load and process batch data more efficiently.
 
 🔄 **Updated Validation** – Improved the validation strategy for better model assessment.
 
