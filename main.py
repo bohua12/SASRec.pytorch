@@ -30,6 +30,7 @@ parser.add_argument('--inference_only', default=False, type=str2bool)
 parser.add_argument('--state_dict_path', default=None, type=str)
 parser.add_argument('--weight_decay', default=1e-3, type=float)
 parser.add_argument('--verification_frequency', default=5, type=int)
+parser.add_argument('--early_stopping_patience', default=50, type=int)
 
 
 # Create Training Directory
@@ -113,8 +114,8 @@ if __name__ == '__main__':
 
     ## (Mentioned in III.E:Network Tuning)
     ## Use Binary Cross Entropy as objective function 
+    ## Reason why not BCELoss: Due to numerical stability (includes built in sigmoid)
     bce_criterion = torch.nn.BCEWithLogitsLoss() # torch.nn.BCELoss()
-    ## (Mentioned in III.E:Network Tuning)
 
     ## Use Adam Optimizer with weight decay (updated implementation)
     adam_optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
@@ -129,6 +130,8 @@ if __name__ == '__main__':
     T = 0.0
     ## Training time since time of last eval (5 epochs)
     t0 = time.time()
+    ## Keep track for early stoppage
+    epochs_since_improvement = 0
 
     ## Actual Training
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
@@ -149,6 +152,7 @@ if __name__ == '__main__':
             indices = np.where(pos != 0)
 
             ## Binary Cross Entropy loss for networking tuning. (Use BCE because this is a binary classification task)
+            ## Note that BCE used here is "BCEWithLogitsLoss", thats comes with Sigmoid built in
             loss = bce_criterion(pos_logits[indices], pos_labels[indices])
             loss += bce_criterion(neg_logits[indices], neg_labels[indices])
 
@@ -190,10 +194,20 @@ if __name__ == '__main__':
                 fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
                 fname = fname.format(epoch, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
                 torch.save(model.state_dict(), os.path.join(folder, fname))
+                epochs_since_improvement = 0
+            else:
+                print(f"{epoch} epochs since the last improvement in Validation NDCG/HR")
+                epochs_since_improvement += args.verification_frequency
 
             ## Log results in log.txt
             f.write(str(epoch) + ' ' + str(t_valid) + ' ' + str(t_test) + '\n')
             f.flush()
+
+            ## Activate early stoppage if patience is exceeded
+            if epochs_since_improvement >= args.early_stopping_patience:
+                print(f"Early stopping triggered at {epoch} epochs, after {epochs_since_improvement} epochs without improvement in Validaition NDCG/HR.")
+                f.write(str(epoch) + "Early Stopping Triggered" + '\n')
+                break
             ## Reset timer for next itr of x epochs
             t0 = time.time()
             ## Toggle model back to Training mode (part of pytorch module.py)
