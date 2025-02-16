@@ -108,7 +108,6 @@ if __name__ == '__main__':
         t_test = evaluate(model, dataset, args)
         print('test (NDCG@10: %.4f, HR@10: %.4f)' % (t_test[0], t_test[1]))
     
-    ## TODO: Qn: If so many lines is crossed out, dosent mean this not rly the acutal model alr?
     # ce_criterion = torch.nn.CrossEntropyLoss()
     # https://github.com/NVIDIA/pix2pixHD/issues/9 how could an old bug appear again...
 
@@ -119,15 +118,16 @@ if __name__ == '__main__':
 
     ## Use Adam Optimizer with weight decay (updated implementation)
     adam_optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
+
     ## Use adam optimizer without weight decay (original implementation)
     #adam_optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.98))
 
     best_val_ndcg, best_val_hr = 0.0, 0.0
-    best_test_ndcg, best_test_hr = 0.0, 0.0
+    # best_test_ndcg, best_test_hr = 0.0, 0.0
 
     ## TOTAL training time
     T = 0.0
-    ## Training time since time of last eval (20 epochs)
+    ## Training time since time of last eval (5 epochs)
     t0 = time.time()
 
     ## Actual Training
@@ -136,23 +136,28 @@ if __name__ == '__main__':
         if args.inference_only: break # just to decrease identition
         print("========== Epoch ", epoch, " ==========")
 
+        # Fetch data from DataLoader (user ID, interaction Sequence, +ve Samples, -ve Samples)
         for step, (u, seq, pos, neg) in enumerate(dataloader):
             u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
+            # pos_logits: Likelihood +ve samples; derieved from dot product 
             pos_logits, neg_logits = model(u, seq, pos, neg)
+            # pos_labels: correct item high logit; neg_labels: incorrect item low logit
             pos_labels, neg_labels = torch.ones(pos_logits.shape, device=args.device), torch.zeros(neg_logits.shape, device=args.device)
 
             ## Ok use the adam for network tuning, tune hyperparams
-            adam_optimizer.zero_grad()
+            adam_optimizer.zero_grad() ## Set all gradients to 0 before backprop
             indices = np.where(pos != 0)
 
-            ## Binary Cross Entropy loss for networking tuning
+            ## Binary Cross Entropy loss for networking tuning. (Use BCE because this is a binary classification task)
             loss = bce_criterion(pos_logits[indices], pos_labels[indices])
             loss += bce_criterion(neg_logits[indices], neg_labels[indices])
-            for param in model.item_emb.parameters(): loss += args.l2_emb * torch.norm(param)
 
-            ## Is this ti backpropogate and update model param
-            ## TODO: Qn actl I know in a technical sense what Backprop is and its benefits but can u explain how it works?
-            ## QT: backward() is runnign in C++ and CUDA so i cannot click inside; Idea is based on dynamic graph. Only very high level PHD need do
+            ## L2 regularization (prevent overfitting) -> Value is hyperparam
+            for param in model.item_emb.parameters(): 
+                loss += args.l2_emb * torch.norm(param)
+
+            ## Backward propagation compute gradient of loss (adjust weights of previous layers)
+            ## Note: backward() is running in C++ and CUDA so i cannot click inside; Idea is based on dynamic graph. Only very high level PHD need to unds
             loss.backward()
 
             adam_optimizer.step()
@@ -173,12 +178,14 @@ if __name__ == '__main__':
             print('epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
                     % (epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
 
-            ## Save model if ANY 4 of the metrics improve (TODO: Change!)
-            if t_valid[0] > best_val_ndcg or t_valid[1] > best_val_hr or t_test[0] > best_test_ndcg or t_test[1] > best_test_hr:
+            ## Save model only if either of the Validation Metrics improve (Not training Metrics)
+            ## Reason being, Training Loss is more for evaluating hyperparam settings
+            # TODO: Hyperparameter to change metrics used to evaluate model saving
+            if t_valid[0] > best_val_ndcg or t_valid[1] > best_val_hr:
                 best_val_ndcg = max(t_valid[0], best_val_ndcg)
                 best_val_hr = max(t_valid[1], best_val_hr)
-                best_test_ndcg = max(t_test[0], best_test_ndcg)
-                best_test_hr = max(t_test[1], best_test_hr)
+                # best_test_ndcg = max(t_test[0], best_test_ndcg)
+                # best_test_hr = max(t_test[1], best_test_hr)
                 folder = args.dataset + '_' + args.train_dir
                 fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
                 fname = fname.format(epoch, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)

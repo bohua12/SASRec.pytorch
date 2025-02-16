@@ -61,10 +61,10 @@ class SASRecDataset(Dataset):
         for i in reversed(self.user_train[uid][:-1]):
             seq[idx] = i
             pos[idx] = nxt
-            # As long as nxt is a valid item (ie. not "0" padding), we can generate a negative item
-            # By choosing any item not in ts
+            # As long as "nxt" is a valid item (ie. not "0" padding), we can generate a -ve sample 
+            # By choosing any item not in "ts"
             if nxt != 0:
-                neg[idx] = random_neq(1, self.itemnum + 1, ts)
+                neg[idx] = random_neq(1, self.itemnum + 1, ts) 
             nxt = i
             idx -= 1
             if idx == -1:
