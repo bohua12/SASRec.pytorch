@@ -119,7 +119,6 @@ class SASRec(torch.nn.Module):
 
         return log_feats
 
-    """ Seems like this function is never called anywehre..."""
     ### Seems like calculating +ve -ve sample scores
     ### self.model(data)  equals to self.model.forward(data). Special situation then use this fn
     def forward(self, user_ids, log_seqs, pos_seqs, neg_seqs): # for training        

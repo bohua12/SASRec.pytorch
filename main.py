@@ -132,17 +132,24 @@ if __name__ == '__main__':
     t0 = time.time()
     ## Keep track for early stoppage
     epochs_since_improvement = 0
+    ## Keep track training/validation loss every x epoch
+    train_losses = []
+    valid_losses = []
+    x_epoch_train_loss = 0 
 
     ## Actual Training
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
         ## TODO: qn: Was wodnering why not just cut off code at ~line 100 if we are just gunna break everything here?
-        if args.inference_only: break # just to decrease identition
-        print("========== Epoch ", epoch, " ==========")
+        if args.inference_only: 
+            break 
+        #print("========== Epoch ", epoch, " ==========")
+        epoch_train_loss = 0.0 # Keep track of training loss per epoch
 
         # Fetch data from DataLoader (user ID, interaction Sequence, +ve Samples, -ve Samples)
         for step, (u, seq, pos, neg) in enumerate(dataloader):
             u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
             # pos_logits: Likelihood +ve samples; derieved from dot product 
+            # Note: model(...) essentially calls forward in model.py!
             pos_logits, neg_logits = model(u, seq, pos, neg)
             # pos_labels: correct item high logit; neg_labels: incorrect item low logit
             pos_labels, neg_labels = torch.ones(pos_logits.shape, device=args.device), torch.zeros(neg_logits.shape, device=args.device)
@@ -165,7 +172,9 @@ if __name__ == '__main__':
             loss.backward()
 
             adam_optimizer.step()
-            print("loss in epoch {} iteration {}: {}".format(epoch, step, loss.item())) # expected 0.4~0.6 after init few epochs
+            epoch_train_loss += loss.item()
+            #print("loss in epoch {} iteration {}: {}".format(epoch, step, loss.item())) # expected 0.4~0.6 after init few epochs
+        x_epoch_train_loss += epoch_train_loss / len(dataloader) # Every 5 epoch (by default)
 
         ## Every 5 (by default) epoch, evaluate and save the model
         if epoch % args.verification_frequency == 0:
@@ -179,8 +188,15 @@ if __name__ == '__main__':
             ## Eval test and validation performance
             t_test = evaluate(model, dataset, args)
             t_valid = evaluate_valid(model, dataset, args)
+            ## Save validation and train loss every x epoch
+            train_losses.append(x_epoch_train_loss / float(args.verification_frequency))
+            #print(train_losses)
+            x_epoch_train_loss = 0
+            valid_losses.append(t_valid[2])  # Store validation loss
+            #print("valid_losses", valid_losses)
             print('epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
                     % (epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
+            print('Validation Loss:%f, Avg Training Loss:%f' % (valid_losses[-1], train_losses[-1]))
 
             ## Save model only if either of the Validation Metrics improve (Not training Metrics)
             ## Reason being, Training Loss is more for evaluating hyperparam settings
@@ -196,7 +212,7 @@ if __name__ == '__main__':
                 torch.save(model.state_dict(), os.path.join(folder, fname))
                 epochs_since_improvement = 0
             else:
-                print(f"{epoch} epochs since the last improvement in Validation NDCG/HR")
+                print(f"{epochs_since_improvement} epochs since the last improvement in Validation NDCG/HR")
                 epochs_since_improvement += args.verification_frequency
 
             ## Log results in log.txt

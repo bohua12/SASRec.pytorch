@@ -4,7 +4,7 @@ import random
 import numpy as np
 from collections import defaultdict
 from torch.utils.data import Dataset
-
+import torch
 
 """ User-item indexing"""
 """ u2i_index: All items interacted by user u"""
@@ -177,12 +177,19 @@ def evaluate_valid(model, dataset, args):
     NDCG = 0.0
     valid_user = 0.0
     HT = 0.0
+    validation_loss = 0
+    num_samples = 0
+
     if usernum>10000:
         users = random.sample(range(1, usernum + 1), 10000)
     else:
         users = range(1, usernum + 1)
+
+    bce_criterion = torch.nn.BCEWithLogitsLoss()
+
     for u in users:
-        if len(train[u]) < 1 or len(valid[u]) < 1: continue
+        if len(train[u]) < 1 or len(valid[u]) < 1: 
+            continue
 
         seq = np.zeros([args.maxlen], dtype=np.int32)
         idx = args.maxlen - 1
@@ -196,7 +203,8 @@ def evaluate_valid(model, dataset, args):
         item_idx = [valid[u][0]]
         for _ in range(100):
             t = np.random.randint(1, itemnum + 1)
-            while t in rated: t = np.random.randint(1, itemnum + 1)
+            while t in rated: 
+                t = np.random.randint(1, itemnum + 1)
             item_idx.append(t)
 
         predictions = -model.predict(*[np.array(l) for l in [[u], [seq], item_idx]])
@@ -206,11 +214,28 @@ def evaluate_valid(model, dataset, args):
 
         valid_user += 1
 
+        # Compute val loss
+        # Had to unsqueeze to convert pos_logits to same shape as pos_label to calc loss!
+        pos_logits = (-predictions[0]).unsqueeze(0)  # First item is the ground truth
+        neg_logits = -predictions[1:]  # Remaining 100 are negative samples
+        pos_label = torch.tensor([1.0], device=args.device)
+        neg_labels = torch.zeros_like(neg_logits, device=args.device)
+
+        loss = bce_criterion(pos_logits.to(args.device), pos_label)
+        loss += bce_criterion(neg_logits.to(args.device), neg_labels)
+        validation_loss += loss.item()
+        num_samples += 1
+
         if rank < 10:
             NDCG += 1 / np.log2(rank + 2)
             HT += 1
         if valid_user % 100 == 0:
             print('.', end="")
             sys.stdout.flush()
+    if num_samples > 0:
+        avg_valid_loss = validation_loss / num_samples
+    else:
+        avg_valid_loss = float('inf')
+    print(f"Validation Loss={validation_loss}, num_samples={num_samples}, avg_valid_loss={avg_valid_loss}")
 
-    return NDCG / valid_user, HT / valid_user
+    return NDCG / valid_user, HT / valid_user, avg_valid_loss
