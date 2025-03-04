@@ -40,19 +40,18 @@ class SASRec(torch.nn.Module):
         ## IIIA: Embedding Layer-Positional Embedding - Create Positional Embedding (Because of nature of self-attention module)
         self.pos_emb = torch.nn.Embedding(args.maxlen+1, args.hidden_units, padding_idx=0)
         ## IIIC: Stacking Self-Attention Blocks-Dropout - alleviate overfitting in Deep NN (randomly turn off neurons)
-        ## Or does this refer to "Apply a drouput layer on embedding E" (E = Input Embedding Matrix)
-        ## Set to 0.2 on default
-        self.emb_dropout = torch.nn.Dropout(p=args.dropout_rate)
+        self.emb_dropout = torch.nn.Dropout(p=args.dropout_rate) # Set to 0.2 on default
 
+        # BASICALLY: ... = torch.nn.ModuleList() is basically ... = [], except there are reason why we do the former!!! Understoof
         ## Self-Attention layers
         ## IIIC: Stacking Self-Attention Blocks-Layer Normalization: Normalise input
-        self.attention_layernorms = torch.nn.ModuleList() # to be Q for self-attention
-        self.attention_layers = torch.nn.ModuleList()
+        self.attention_layernorms = torch.nn.ModuleList() # Normalise inputs before selfattention
+        self.attention_layers = torch.nn.ModuleList() # Store multiple self-attention laters
 
-        ## FF Layers
+        ## FFN Layers
         ## IIIC: Stacking Self-Attention Blocks-Layer Normalization: Normalise input
-        self.forward_layernorms = torch.nn.ModuleList()
-        self.forward_layers = torch.nn.ModuleList()
+        self.forward_layernorms = torch.nn.ModuleList() # Store layer normalisation layers
+        self.forward_layers = torch.nn.ModuleList() # Stores actual FFN
 
         ## IIID: Prediction Layer-Explicit User Modeling: Insert explicit user embedding at last layer (idgi, not even sure if its this one!)
         self.last_layernorm = torch.nn.LayerNorm(args.hidden_units, eps=1e-8)
@@ -81,21 +80,23 @@ class SASRec(torch.nn.Module):
             # self.neg_sigmoid = torch.nn.Sigmoid()
 
     """ Generate user sequence embedding"""
-    ## TODO: QN: Why can't just use torch.nn.embeddings but need item_emb?
     def log2feats(self, log_seqs): # TODO: fp64 and int64 as default in python, trim?
         ## Get embedding from item_emb (declared at __init__)
+        ## Seqs is hidden representation of user's interaction; Built from item + positional embedding
         seqs = self.item_emb(torch.LongTensor(log_seqs).to(self.dev))
-        ## TODO:QNL Why we sqrt here? Ans: Dont want gradient to explode
-        seqs *= self.item_emb.embedding_dim ** 0.5 
-        ## Not sure whats poss for, ANS: its a numpy array
+        seqs *= self.item_emb.embedding_dim ** 0.5  # Sqrt to prevent Gradient Explosion
+
+        ## Poss is positional embedding for input sequence to incorporate order info; to be used later in pos_emb
         poss = np.tile(np.arange(1, log_seqs.shape[1] + 1), [log_seqs.shape[0], 1])
         poss *= (log_seqs != 0)
+
         ## IIIA: Embedding Layer-Positional Embedding - Create Positional Embedding (Because of nature of self-attention module)
         seqs += self.pos_emb(torch.LongTensor(poss).to(self.dev))
+
         ## IIIC: Stacking Self-Attention Blocks-Dropout - alleviate overfitting in Deep NN (randomly turn off neurons)
         seqs = self.emb_dropout(seqs)
 
-        ## Creates Mask (prevent peek into future) 
+        ## Creates Attention Mask (prevent peek into future) 
         tl = seqs.shape[1] # time dim len for enforce causality
         attention_mask = ~torch.tril(torch.ones((tl, tl), dtype=torch.bool, device=self.dev))
 

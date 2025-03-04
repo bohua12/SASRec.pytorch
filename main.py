@@ -17,18 +17,18 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', required=True)
 parser.add_argument('--train_dir', required=True)
 parser.add_argument('--batch_size', default=128, type=int)
-parser.add_argument('--lr', default=0.001, type=float)
+parser.add_argument('--lr', default=0.01, type=float)
 parser.add_argument('--maxlen', default=200, type=int)
-parser.add_argument('--hidden_units', default=50, type=int)
+parser.add_argument('--hidden_units', default=64, type=int)
 parser.add_argument('--num_blocks', default=2, type=int)
 parser.add_argument('--num_epochs', default=1000, type=int)
 parser.add_argument('--num_heads', default=1, type=int)
-parser.add_argument('--dropout_rate', default=0.2, type=float)
+parser.add_argument('--dropout_rate', default=0.3, type=float)
 parser.add_argument('--l2_emb', default=0.0, type=float)
 parser.add_argument('--device', default='cuda', type=str)
 parser.add_argument('--inference_only', default=False, type=str2bool)
 parser.add_argument('--state_dict_path', default=None, type=str)
-parser.add_argument('--weight_decay', default=1e-3, type=float)
+parser.add_argument('--weight_decay', default=1e-2, type=float)
 parser.add_argument('--verification_frequency', default=5, type=int)
 parser.add_argument('--early_stopping_patience', default=50, type=int)
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     
     ## Set up files for logging
     f = open(os.path.join(args.dataset + '_' + args.train_dir, 'log.txt'), 'w')
-    f.write('epoch (val_ndcg, val_hr) (test_ndcg, test_hr)\n')
+    f.write('epoch (val_ndcg, val_hr, val_loss) (test_ndcg, test_hr)\n')
     
     # Set up dataset and dataloader
     ds = SASRecDataset(user_train, usernum, itemnum, args.maxlen)
@@ -83,9 +83,6 @@ if __name__ == '__main__':
     ## All zero will slow down in beginiing (See qingtian's init code)
     model.pos_emb.weight.data[0, :] = 0
     model.item_emb.weight.data[0, :] = 0
-
-    # this fails embedding init 'Embedding' object has no attribute 'dim'
-    # model.apply(torch.nn.init.xavier_uniform_)
     
     model.train() # enable model training
     
@@ -103,14 +100,10 @@ if __name__ == '__main__':
             print('pdb enabled for your quick check, pls type exit() if you do not need it')
             import pdb; pdb.set_trace()
             
-    ## If arg included inference_only as True
     if args.inference_only:
         model.eval()
         t_test = evaluate(model, dataset, args)
         print('test (NDCG@10: %.4f, HR@10: %.4f)' % (t_test[0], t_test[1]))
-    
-    # ce_criterion = torch.nn.CrossEntropyLoss()
-    # https://github.com/NVIDIA/pix2pixHD/issues/9 how could an old bug appear again...
 
     ## (Mentioned in III.E:Network Tuning)
     ## Use Binary Cross Entropy as objective function 
@@ -119,9 +112,6 @@ if __name__ == '__main__':
 
     ## Use Adam Optimizer with weight decay (updated implementation)
     adam_optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
-
-    ## Use adam optimizer without weight decay (original implementation)
-    #adam_optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.98))
 
     best_val_ndcg, best_val_hr = 0.0, 0.0
     # best_test_ndcg, best_test_hr = 0.0, 0.0
@@ -140,8 +130,8 @@ if __name__ == '__main__':
     ## Actual Training
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
         ## TODO: qn: Was wodnering why not just cut off code at ~line 100 if we are just gunna break everything here?
-        if args.inference_only: 
-            break 
+        if args.inference_only:
+            break
         #print("========== Epoch ", epoch, " ==========")
         epoch_train_loss = 0.0 # Keep track of training loss per epoch
 
@@ -188,15 +178,8 @@ if __name__ == '__main__':
             ## Eval test and validation performance
             t_test = evaluate(model, dataset, args)
             t_valid = evaluate_valid(model, dataset, args)
-            ## Save validation and train loss every x epoch
-            train_losses.append(x_epoch_train_loss / float(args.verification_frequency))
-            #print(train_losses)
-            x_epoch_train_loss = 0
-            valid_losses.append(t_valid[2])  # Store validation loss
-            #print("valid_losses", valid_losses)
-            print('epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
-                    % (epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1]))
-            print('Validation Loss:%f, Avg Training Loss:%f' % (valid_losses[-1], train_losses[-1]))
+            print('epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f, validLoss: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
+                    % (epoch, T, t_valid[0], t_valid[1], t_valid[2], t_test[0], t_test[1]))
 
             ## Save model only if either of the Validation Metrics improve (Not training Metrics)
             ## Reason being, Training Loss is more for evaluating hyperparam settings
@@ -212,8 +195,8 @@ if __name__ == '__main__':
                 torch.save(model.state_dict(), os.path.join(folder, fname))
                 epochs_since_improvement = 0
             else:
-                print(f"{epochs_since_improvement} epochs since the last improvement in Validation NDCG/HR")
                 epochs_since_improvement += args.verification_frequency
+                print(f"{epochs_since_improvement} epochs since the last improvement in Validation NDCG/HR")
 
             ## Log results in log.txt
             f.write(str(epoch) + ' ' + str(t_valid) + ' ' + str(t_test) + '\n')
