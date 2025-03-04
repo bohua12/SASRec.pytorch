@@ -4,7 +4,7 @@ import torch
 import argparse
 from torch.utils.data import DataLoader
 
-from model import SASRec
+from model import SASRec, init_weights
 from utils import *
 
 def str2bool(s):
@@ -77,13 +77,9 @@ if __name__ == '__main__':
         except:
             pass # just ignore those failed init layers
 
-    ## Zeroes out embeddings for padding tokens (??)
-    ## Is it the padding u told me about? but idg how this does that
-    ## Ans: This is wrong!! Shd be initialising with 
-    ## All zero will slow down in beginiing (See qingtian's init code)
-    model.pos_emb.weight.data[0, :] = 0
-    model.item_emb.weight.data[0, :] = 0
-    
+    ## Initialise weights through model.py
+    init_weights(model)
+
     model.train() # enable model training
     
     epoch_start_idx = 1

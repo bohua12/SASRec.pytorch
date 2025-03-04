@@ -150,3 +150,24 @@ class SASRec(torch.nn.Module):
         # preds = self.pos_sigmoid(logits) # rank same item list for different users
 
         return logits # preds # (U, I)
+
+
+def init_weights(model):
+    """
+    Initializes model weights using appropriate distributions.
+    - Linear layers: Normal(mean=0, std=0.02), bias=0
+    - Embeddings: Normal(mean=0, std=0.02)
+    - LayerNorm: Weight=1, Bias=0
+    """
+    for m in model.modules():
+        if isinstance(m, torch.nn.Linear):
+            torch.nn.init.normal_(m.weight.data, mean=0.0, std=0.02)
+            if m.bias is not None:
+                torch.nn.init.zeros_(m.bias.data)
+
+        elif isinstance(m, (torch.nn.Embedding, torch.nn.Parameter)):
+            torch.nn.init.normal_(m.weight.data, mean=0.0, std=0.02)
+
+        elif isinstance(m, torch.nn.LayerNorm):
+            torch.nn.init.ones_(m.weight.data)
+            torch.nn.init.zeros_(m.bias.data)
