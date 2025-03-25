@@ -2,7 +2,6 @@ import sys
 import copy
 import random
 import numpy as np
-from collections import defaultdict
 from torch.utils.data import Dataset
 import torch
 
@@ -72,42 +71,7 @@ class SASRecDataset(Dataset):
 
         return uid, seq, pos, neg
 
-"""Simple, split into train/test/valid"""
-def data_partition(fname):
-    usernum = 0
-    itemnum = 0
-    User = defaultdict(list)
-    user_train = {}
-    user_valid = {}
-    user_test = {}
-    # assume user/item index starting from 1
-    f = open('data/%s.txt' % fname, 'r')
 
-    ## Store interaction in User Dict
-    for line in f:
-        u, i = line.rstrip().split(' ')
-        u = int(u)
-        i = int(i)
-        usernum = max(u, usernum)
-        itemnum = max(i, itemnum)
-        User[u].append(i)
-
-    ## IDGI why user_valid[] = [] so many times haha but other than that shd be ok
-    ## For nFeedback < 3, all use to train
-    ## >=3, last to test, 2ndLast to valid, rest to train
-    for user in User:
-        nfeedback = len(User[user])
-        if nfeedback < 3:
-            user_train[user] = User[user]
-            user_valid[user] = []
-            user_test[user] = []
-        else:
-            user_train[user] = User[user][:-2]
-            user_valid[user] = []
-            user_valid[user].append(User[user][-2])
-            user_test[user] = []
-            user_test[user].append(User[user][-1])
-    return [user_train, user_valid, user_test, usernum, itemnum]
 
 # TODO: merge evaluate functions for test and val set
 # evaluate on test set
@@ -141,9 +105,6 @@ def evaluate(model, dataset, args):
 
         ## Generate -ve samples
         ## IIID: For each user, we randomly sample 100 -ve items, and rank these items (incl the predicted) with the ground-truth items
-        ## TODO: My Unds: With that, Hit@10 and NDGC@10 can be evaluated (See how high the predicted item rank among 100 random items, compared to groun truth)
-        ## TODO: Qn: How exactly does this work? 
-        ## TODO: What exactly are we doing here (and the predictions below)
         rated = set(train[u])
         rated.add(0)
         item_idx = [test[u][0]]
@@ -164,11 +125,10 @@ def evaluate(model, dataset, args):
             NDCG += 1 / np.log2(rank + 2)
             HT += 1
         if valid_user % 100 == 0:
-            print('.', end="")
+            #print('.', end="")
             sys.stdout.flush()
 
     return NDCG / valid_user, HT / valid_user
-
 
 # evaluate on val set
 def evaluate_valid(model, dataset, args):
@@ -180,10 +140,7 @@ def evaluate_valid(model, dataset, args):
     validation_loss = 0
     num_samples = 0
 
-    if usernum>10000:
-        users = random.sample(range(1, usernum + 1), 10000)
-    else:
-        users = range(1, usernum + 1)
+    users = range(1, usernum + 1)
 
     bce_criterion = torch.nn.BCEWithLogitsLoss()
 
@@ -230,7 +187,7 @@ def evaluate_valid(model, dataset, args):
             NDCG += 1 / np.log2(rank + 2)
             HT += 1
         if valid_user % 100 == 0:
-            print('.', end="")
+            #print('.', end="")
             sys.stdout.flush()
     if num_samples > 0:
         avg_valid_loss = validation_loss / num_samples
@@ -239,3 +196,33 @@ def evaluate_valid(model, dataset, args):
     print(f"Validation Loss={validation_loss}, num_samples={num_samples}, avg_valid_loss={avg_valid_loss}")
 
     return NDCG / valid_user, HT / valid_user, avg_valid_loss
+
+# For use per step (per epoch) in training loop (shifted code from main.py to here to clean up main.py)
+def train_model(model, optimizer, bce_criterion, u, seq, pos, neg, args):
+    model.train()
+    
+    u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
+    pos_logits, neg_logits = model(u, seq, pos, neg)
+    
+    # Labels: positive samples = 1, negative samples = 0
+    pos_labels, neg_labels = torch.ones(pos_logits.shape, device=args.device), torch.zeros(neg_logits.shape, device=args.device)
+
+    # Reset gradients
+    optimizer.zero_grad()
+    indices = np.where(pos != 0)
+
+    # Compute BCE loss
+    loss = bce_criterion(pos_logits[indices], pos_labels[indices])
+    loss += bce_criterion(neg_logits[indices], neg_labels[indices])
+
+    # L2 Regularization (Prevent Overfitting)
+    for param in model.item_emb.parameters():
+        loss += args.l2_emb * torch.norm(param)
+
+    # Backpropagation
+    loss.backward()
+    optimizer.step()
+    #print(f"Loss item: {loss.item()}")
+    #print(f"Loss: {loss}")
+    return loss
+    
