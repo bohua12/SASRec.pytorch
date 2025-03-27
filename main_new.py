@@ -52,7 +52,7 @@ if __name__ == '__main__':
     # SET UP LOGGING
     f = open(os.path.join(args.dataset + '_' + args.train_dir, 'log.txt'), 'w')
     f.write('epoch (val_ndcg, val_hr, val_loss) (test_ndcg, test_hr)\n')
-    
+
     ## TOTAL training time
     T = 0.0
     ## Training time since time of last eval (5 epochs)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
                 fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
                 fname = fname.format(epoch, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
                 # MODEL SAVING: Next time? torch.save(model.state_dict(), os.path.join(folder, fname))
-                f.write("Below line Achieved best metric sofar!")
+                f.write("[BEST]")
 
                 epochs_since_improvement = 0
             else:

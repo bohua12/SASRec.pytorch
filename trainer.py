@@ -1,5 +1,5 @@
 from utils.utils import *
-from utils.dataloader import data_partition, get_dataloader # STATE WHILE FN LATER!
+from utils.dataloader import data_partition, data_partition_new, get_dataloader # STATE WHILE FN LATER!
 from model import SASRec, init_weights
 import torch
 import os
@@ -10,7 +10,14 @@ class Trainer(object):
         ### LOAD DATA ###
         print("Loading data...")
         # Split data into Train/Test/Valid
-        [self.user_train, self.user_valid, self.user_test, self.n_users, self.n_items] = data_partition(args.dataset)
+        #[self.user_train, self.user_valid, self.user_test, self.n_users, self.n_items] = data_partition(args.dataset)
+        [   
+        self.user_train_m, self.user_valid_m, self.user_test_m,
+        self.user_train_a, self.user_valid_a, self.user_test_a,
+        self.user_train_b, self.user_valid_b, self.user_test_b,
+        self.n_users, self.n_items_m, self.n_items_a, self.n_items_b
+        ] = data_partition_new("abe", "abe_50_preprocessed.txt", args)
+        
         # Get dataloader for training dataset
         self.dl = get_dataloader(self.user_train, self.n_users, self.n_items, args)
         print("Data loaded successfully!\n")
@@ -83,7 +90,7 @@ class Trainer(object):
         valid_user, num_samples = 0.0, 0
         total_val_loss, val_loss = 0.0, 0.0
 
-        users = range(1, self.n_users + 1)
+        users = range(self.n_users)
 
         for u in users:
             if len(self.user_valid[u]) < 1: 
@@ -148,7 +155,7 @@ class Trainer(object):
         NDCG, HT = 0.0, 0.0
         valid_user= 0
 
-        users = range(1, self.n_users + 1)
+        users = range(self.n_users)
 
         # Reconstruct user sequence from train + valid
         # seq[] = train[u] + valid[u] (then we predict test[u])
