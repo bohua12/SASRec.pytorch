@@ -1,8 +1,81 @@
+from os.path import join
+import json
 from collections import defaultdict
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 
 
+def data_partition_new(fname, fraw, args):
+    with open(join("data", fname, 'map_item.txt'), 'r') as f:
+        map_i = json.load(f)
+        list_dm = np.array(list(map_i.values()))[:, 1] # Slice out just domain col
+        n_items_a = np.sum(list_dm == 0) # Count how many itrems in dom a
+        n_items_b = np.sum(list_dm == 1)
+    print("ell")
+    print(n_items_a)
+    print(n_items_b)
+    User = defaultdict(list)
+    user_train_a, user_valid_a, user_test_a = {}, {}, {}
+    user_train_b, user_valid_b, user_test_b = {}, {}, {}
+    user_train_m, user_valid_m, user_test_m = {}, {}, {}
+    
+    with open(join('data', fname, fraw), 'r', encoding='utf-8') as f:
+        for line in f:
+            seq = []
+            line = line.strip().split(' ')
+            u = int(line[0])
+            for ui in line[1:][-args.maxlen:]:
+                User[u].append(int(ui.split('|')[0]))    
+        for user in User:
+            nfeedback = len(User[user])
+            if nfeedback < 3:
+                user_train_m[user] = User[user]
+                user_valid_m[user] = []
+                user_test_m[user] = []
+
+                user_train_a[user] = [i for i in User[user] if i < n_items_a]
+                user_train_b[user] = [i for i in User[user] if i >= n_items_a]
+                user_valid_a[user] = []
+                user_valid_b[user] = []
+                user_test_a[user] = []
+                user_test_b[user] = []
+            else:
+                user_train_m[user] = User[user][:-2]
+                user_valid_m[user] = [User[user][-2]]
+                user_test_m[user] = [User[user][-1]]
+
+                user_train_a[user] = [i for i in User[user][:-2] if i < n_items_a]
+                user_train_b[user] = [i for i in User[user][:-2] if i >= n_items_a]
+
+                user_valid_a[user] = [User[user][-2]] if User[user][-2] < n_items_a else []
+                user_valid_b[user] = [User[user][-2]] if User[user][-2] >= n_items_a else []
+
+                user_test_a[user] = [User[user][-1]] if User[user][-1] < n_items_a else []
+                user_test_b[user] = [User[user][-1]] if User[user][-1] >= n_items_a else []
+
+    print(f"user_train_a: {len(user_train_a)}")
+    print(f"user_valid_a: {len(user_valid_a)}")
+    print(f"user_test_a: {len(user_test_a)}")
+
+    print(f"user_train_b: {len(user_train_b)}")
+    print(f"user_valid_b: {len(user_valid_b)}")
+    print(f"user_test_b: {len(user_test_b)}")
+
+    print(f"user_train_m: {len(user_train_m)}")
+    print(f"user_valid_m: {len(user_valid_m)}")
+    print(f"user_test_m: {len(user_test_m)}")
+
+    n_users = len(user_train_m)
+    print(n_users)
+    
+    n_items_m = n_items_a + n_items_b
+
+    return (
+        user_train_m, user_valid_m, user_test_m,
+        user_train_a, user_valid_a, user_test_a,
+        user_train_b, user_valid_b, user_test_b,
+        n_users, n_items_m, n_items_a, n_items_b
+    )
 
 """Simple, split into train/test/valid"""
 def data_partition(fname):
@@ -24,9 +97,6 @@ def data_partition(fname):
         itemnum = max(i, itemnum)
         User[u].append(i)
 
-    ## IDGI why user_valid[] = [] so many times haha but other than that shd be ok
-    ## For nFeedback < 3, all use to train
-    ## >=3, last to test, 2ndLast to valid, rest to train
     for user in User:
         nfeedback = len(User[user])
         if nfeedback < 3:
@@ -75,9 +145,8 @@ class SASRecDataset(Dataset):
             seq[idx] = i
             pos[idx] = nxt
             # As long as "nxt" is a valid item (ie. not "0" padding), we can generate a -ve sample 
-            # By choosing any item not in "ts"
             if nxt != 0:
-                neg[idx] = random_neq(1, self.itemnum + 1, ts) 
+                neg[idx] = random_neq(1, self.itemnum + 1, ts) #random_neq generates a random -ve sample user never inr with
             nxt = i
             idx -= 1
             if idx == -1:
@@ -85,6 +154,69 @@ class SASRecDataset(Dataset):
 
         return uid, seq, pos, neg
     
+
+class CDSRDataset(Dataset):
+    def __init__(self, train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, maxlen):
+        self.train_m = train_m
+        self.train_a = train_a
+        self.train_b = train_b
+        self.usernum = usernum
+        self.itemnum_m = itemnum_m
+        self.itemnum_a = itemnum_a
+        self.itemnum_b = itemnum_b
+        self.maxlen = maxlen
+        self.users = list(train_m.keys())  # all 3 dataset will contain all users (handled in data_partition_new)
+    
+    def __len__(self):
+        return len(self.users)
+    
+    """
+    Constructs input, positive, and negative sequences for training with legnth maxlen
+
+    Given a user's interaction sequence:
+    - `seq_arr` stores the historical items (input sequence).
+    - `pos_arr` stores the ground truth next item for each timestep.
+    - `neg_arr` stores randomly sampled negative items that the user has not interacted with.
+
+    This prepares data for SASRec training, where at each step the model learns to predict the next item,
+    while distinguishing it from negative samples.
+
+    Args:
+        seq (list[int]): User's sequence of interacted items.
+        itemnum (int): Total number of items in this domain (used for negative sampling range).
+
+    Returns:
+        tuple: (seq_arr, pos_arr, neg_arr) 
+    """
+    def build_sequence(self, seq, itemnum):
+        ts = set(seq) 
+        seq_arr = np.zeros([self.maxlen], dtype=np.int32)
+        pos_arr = np.zeros([self.maxlen], dtype=np.int32)
+        neg_arr = np.zeros([self.maxlen], dtype=np.int32)
+        nxt = seq[-1]
+        idx = self.maxlen - 1
+        for i in reversed(seq[:-1]):
+            seq_arr[idx] = i
+            pos_arr[idx] = nxt
+            if nxt != 0: # ie. only generate -ve sample if next item is valid
+                neg_arr[idx] = random_neq(1, itemnum + 1, ts)
+            nxt = i
+            idx -= 1
+            if idx == -1:
+                break
+        return seq_arr, pos_arr, neg_arr
+    
+    def __getitem__(self, idx):
+        # Gets uid of all users in processed dataset
+        uid = self.users[idx]
+        
+        # get sequuence
+        seq_m, pos_m, neg_m = self.build_sequence(self.train_m[uid], self.itemnum_m)
+        seq_a, pos_a, neg_a = self.build_sequence(self.train_a[uid], self.itemnum_a)
+        seq_b, pos_b, neg_b = self.build_sequence(self.train_b[uid], self.itemnum_b)
+
+        return uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b
+
 # sampler for batch generation
 def random_neq(l, r, s):
     t = np.random.randint(l, r)
