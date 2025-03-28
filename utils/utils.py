@@ -2,7 +2,6 @@ import sys
 import copy
 import random
 import numpy as np
-from torch.utils.data import Dataset
 import torch
 
 """ User-item indexing"""
@@ -24,52 +23,6 @@ def build_index(dataset_name):
 
     return u2i_index, i2u_index
 
-# sampler for batch generation
-def random_neq(l, r, s):
-    t = np.random.randint(l, r)
-    while t in s:
-        t = np.random.randint(l, r)
-    return t
-
-""" Standard implementation of abstract class Dataset, to be instantiated and used with DataLoader class"""
-class SASRecDataset(Dataset):
-    def __init__(self, user_train, usernum, itemnum, maxlen):
-        self.user_train = user_train
-        self.usernum = usernum
-        self.itemnum = itemnum
-        self.maxlen = maxlen
-        self.users = list(user_train.keys())
-    
-    def __len__(self):
-        return len(self.users)
-    
-    def __getitem__(self, idx):
-        # Gets uid of current indexed user
-        uid = self.users[idx]
-        # Initialise empty arrays of len(maxlen)
-        seq = np.zeros([self.maxlen], dtype=np.int32)
-        pos = np.zeros([self.maxlen], dtype=np.int32)
-        neg = np.zeros([self.maxlen], dtype=np.int32) # Randomly sampled incorrect item (-ve sample)
-        nxt = self.user_train[uid][-1]
-        idx = self.maxlen - 1
-
-        # Set of ALL items users[idx] have interacted with
-        ts = set(self.user_train[uid])
-        # Reason1 it is reversed: 0-Padding concept
-        # Reason2 it is reversed: Fill in rightmost, latest ones first, and earliest interactions past maxLen are dropped
-        for i in reversed(self.user_train[uid][:-1]):
-            seq[idx] = i
-            pos[idx] = nxt
-            # As long as "nxt" is a valid item (ie. not "0" padding), we can generate a -ve sample 
-            # By choosing any item not in "ts"
-            if nxt != 0:
-                neg[idx] = random_neq(1, self.itemnum + 1, ts) 
-            nxt = i
-            idx -= 1
-            if idx == -1:
-                break
-
-        return uid, seq, pos, neg
 
 
 
@@ -89,11 +42,10 @@ def evaluate(model, dataset, args):
     else:
         users = range(1, usernum + 1)
 
-    ## Creates user Sequence
+    ## Reconstruct user Sequence
     for u in users:
 
         if len(train[u]) < 1 or len(test[u]) < 1: continue
-
         seq = np.zeros([args.maxlen], dtype=np.int32)
         idx = args.maxlen - 1
         seq[idx] = valid[u][0]
