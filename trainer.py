@@ -1,7 +1,6 @@
 from utils.utils import *
-from utils.dataloader import data_partition, data_partition_new, get_dataloader, get_dataloader_cdsr # STATE WHILE FN LATER!
+from utils.dataloader import data_partition, data_partition, get_dataloader # STATE WHILE FN LATER!
 from model_CDSR import CDSR, init_weights
-#from model import SASRec, init_weights
 import torch
 import os
 
@@ -17,11 +16,11 @@ class Trainer(object):
         self.user_train_a, self.user_valid_a, self.user_test_a,
         self.user_train_b, self.user_valid_b, self.user_test_b,
         self.n_users, self.n_items_m, self.n_items_a, self.n_items_b
-        ] = data_partition_new("abe", "abe_50_preprocessed.txt", args)
+        ] = data_partition("abe", "abe_50_preprocessed.txt", args)
 
         # Get dataloader for training dataset
         #self.dl = get_dataloader(self.user_train, self.n_users, self.n_items, self.args)
-        self.dl = get_dataloader_cdsr(self.user_train_m, self.user_train_a, self.user_train_b, self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, args)
+        self.dl = get_dataloader(self.user_train_m, self.user_train_a, self.user_train_b, self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, args)
         print("Data loaded successfully!\n")
 
         # LOAD MODEL
@@ -358,6 +357,7 @@ class Trainer(object):
         return seq
     
     def calc_val_loss(self, predictions):
+        predict
         pos_logits = (-predictions[0]).unsqueeze(0)  # First item is the ground truth
         neg_logits = -predictions[1:]  # Remaining 100 are negative samples
         pos_label = torch.tensor([1.0], device=self.args.device)
