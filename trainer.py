@@ -114,15 +114,7 @@ class Trainer(object):
         users = range(self.n_users)
 
         for u in users:
-
             # seq[] = train[u] (then we predict valid[u])
-            seq = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx = self.args.maxlen - 1
-            for i in reversed(self.user_train[u]):
-                seq[idx] = i
-                idx -= 1
-                if idx == -1: break
-
             if len(self.user_valid_m[u]) > 0:
                 seq_m = self.generate_validation_sequence(self.user_train_m[u], self.args.maxlen)
 
@@ -130,9 +122,9 @@ class Trainer(object):
                 rated.add(0)
                 item_idx = [self.user_valid_m[u][0]]
                 for _ in range(100):
-                    t = np.random.randint(1, self.n_items + 1)
+                    t = np.random.randint(1, self.n_items_m + 1)
                     while t in rated: 
-                        t = np.random.randint(1, self.n_items + 1)
+                        t = np.random.randint(1, self.n_items_m + 1)
                     item_idx.append(t)
 
                 pred_m = -self.model.predict(np.array([seq_m]), item_idx, 'm')
@@ -154,9 +146,9 @@ class Trainer(object):
                 rated.add(0)
                 item_idx = [self.user_valid_a[u][0]]
                 for _ in range(100):
-                    t = np.random.randint(1, self.n_items + 1)
+                    t = np.random.randint(1, self.n_items_a + 1)
                     while t in rated: 
-                        t = np.random.randint(1, self.n_items + 1)
+                        t = np.random.randint(1, self.n_items_a + 1)
                     item_idx.append(t)
 
                 pred_a = -self.model.predict(np.array([seq_a]), item_idx, 'a')
@@ -178,9 +170,9 @@ class Trainer(object):
                 rated.add(0)
                 item_idx = [self.user_valid_b[u][0]]
                 for _ in range(100):
-                    t = np.random.randint(1, self.n_items + 1)
+                    t = np.random.randint(1, self.n_items_b + 1)
                     while t in rated: 
-                        t = np.random.randint(1, self.n_items + 1)
+                        t = np.random.randint(1, self.n_items_b + 1)
                     item_idx.append(t)
 
                 pred_b = -self.model.predict(np.array([seq_b]), item_idx, 'b')
