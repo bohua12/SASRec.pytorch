@@ -214,7 +214,7 @@ class Trainer(object):
 
             ## 2) RATE ITEM
             # Rated and item_idx for m
-            if len(self.user_test_m[u]) > 0:
+            if len(self.user_test_m[u]) > 0 and len(self.user_valid_m[u]) > 0:
                 seq_m = self.generate_test_sequence(self.user_test_m[u], self.user_train_m[u], self.user_valid_m[u], self.args.maxlen)
                 rated_m = set(self.user_train_m[u])
                 rated_m.add(0)
@@ -231,7 +231,7 @@ class Trainer(object):
                 print(f"Sequence for user {u} in domain 'm' was not generated.")
 
             # Rated and item_idx for a
-            if len(self.user_test_a[u]) > 0:
+            if len(self.user_test_a[u]) > 0 and len(self.user_valid_a[u]) > 0:
                 seq_a = self.generate_test_sequence(self.user_test_a[u], self.user_train_a[u], self.user_valid_a[u], self.args.maxlen)
                 rated_a = set(self.user_train_a[u])
                 rated_a.add(0)
@@ -248,7 +248,7 @@ class Trainer(object):
                 print(f"Sequence for user {u} in domain 'a' was not generated.")
 
             # Rated and item_idx for b
-            if len(self.user_test_b[u]) > 0:
+            if len(self.user_test_b[u]) > 0 and len(self.user_valid_b[u]) > 0:
                 seq_b = self.generate_test_sequence(self.user_test_b[u], self.user_train_b[u], self.user_valid_b[u], self.args.maxlen)
                 rated_b = set(self.user_train_b[u])
                 rated_b.add(0)
