@@ -164,7 +164,7 @@ class CDSR(torch.nn.Module):
                 pos_logits_a, neg_logits_a,
                 pos_logits_b, neg_logits_b)
 
-    """ Decided to switch to single predict"""
+    """ Not in use anymore, decided to switch to single predict"""
     def predict_all_3(self, user_ids, seq_m, seq_a, seq_b, item_idx_m, item_idx_a, item_idx_b): # for inference
 
         log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m))

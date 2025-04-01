@@ -142,7 +142,7 @@ class Trainer(object):
                 HT_m += ht
                 rank_m += rank
                 valid_users_m += 1
-                val_loss += self.calc_val_loss(pred_m)
+                val_loss_m += self.calc_val_loss(pred_m)
                 num_samples_m += 1
             else:
                 invalid_m += 1
@@ -166,7 +166,7 @@ class Trainer(object):
                 HT_a += ht
                 rank_a += rank
                 valid_users_a += 1
-                val_loss += self.calc_val_loss(pred_a)
+                val_loss_a += self.calc_val_loss(pred_a)
                 num_samples_a += 1
             else:
                 invalid_a += 1
@@ -190,29 +190,33 @@ class Trainer(object):
                 HT_b += ht
                 rank_b += rank
                 valid_users_b += 1
-                val_loss += self.calc_val_loss(pred_b)
+                val_loss_b += self.calc_val_loss(pred_b)
                 num_samples_b += 1
             else:
                 invalid_b += 1
-
 
         if valid_users_m > 0:
             NDCG_m = NDCG_m / valid_users_m
             HT_m = HT_m / valid_users_m
             rank_m = rank_m / valid_users_m  # Add rank averaging for domain m
+            val_loss_m = val_loss_m / valid_users_m
 
         if valid_users_a > 0:
             NDCG_a = NDCG_a / valid_users_a
             HT_a = HT_a / valid_users_a
             rank_a = rank_a / valid_users_a  # Add rank averaging for domain a
+            val_loss_m = val_loss_m / valid_users_m
 
         if valid_users_b > 0:
             NDCG_b = NDCG_b / valid_users_b
             HT_b = HT_b / valid_users_b
             rank_b = rank_b / valid_users_b  # Add rank averaging for domain b
+            val_loss_m = val_loss_m / valid_users_m
                 
-
-        return NDCG, HT, val_loss
+        print(f"M: {valid_users_m} / {invalid_m + valid_users_m} NDCG_m: {NDCG_m}, HT_m: {HT_m}, avgrank_m: {rank_m}, val_loss_m: {val_loss_m}")
+        print(f"A: {valid_users_a} / {invalid_a + valid_users_a} NDCG_a: {NDCG_a}, HT_a: {HT_a}, avgrank_a: {rank_a}, val_loss_a: {val_loss_a}")
+        print(f"B: {valid_users_b} / {invalid_b + valid_users_b} NDCG_b: {NDCG_b}, HT_b: {HT_b}, avgrank_b: {rank_b}, val_loss_b: {val_loss_b}")
+        return NDCG_m, HT_m, val_loss_m
 
     def run_test(self, i):
         print(f"Testing on epoch {i}...", end="")
@@ -301,7 +305,7 @@ class Trainer(object):
                 #print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}, Rank_b {rank_b}")
             else:
                 invalid_b += 1
-                        # Calculate validation loss
+
         if valid_users_m > 0:
             NDCG_m = NDCG_m / valid_users_m
             HT_m = HT_m / valid_users_m
