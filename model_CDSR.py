@@ -190,10 +190,8 @@ class CDSR(torch.nn.Module):
     def predict(self, seq, item_idx, domain):
         if domain == "m":
             log_feats = self.encoder_m(*self.generate_input_embedding(seq))
-            print("dom a")
         elif domain == "a":
             log_feats = self.encoder_a(*self.generate_input_embedding(seq))
-            print("dom m")
         else:
             log_feats = self.encoder_b(*self.generate_input_embedding(seq))
 

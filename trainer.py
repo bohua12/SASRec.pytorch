@@ -195,9 +195,10 @@ class Trainer(object):
 
         self.model.eval()
 
-        NDCG, HT = 0.0, 0.0
-        valid_users_m, valid_users_a, valid_users_b= 0, 0, 0 
+        NDCG_m, HT_m, NDCG_a, HT_a, NDCG_b, HT_b = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  # filepath: c:\Users\leebo\SASRec.pytorch\trainer.py        valid_users_m, valid_users_a, valid_users_b= 0, 0, 0 
         invalid_m, invalid_a, invalid_b = 0, 0, 0
+        valid_users_m, valid_users_b, valid_users_a = 0, 0, 0
+        rank_m, rank_a, rank_b = 0,0,0
 
         users = range(self.n_users)
         print("len(self.user_test_m)", len(self.user_test_m))
@@ -205,8 +206,8 @@ class Trainer(object):
         print("len(self.user_test_b)", len(self.user_test_b))
 
         for u in users:
-            if len(self.user_test_m[u]) < 1: 
-                continue
+            # if len(self.user_test_m[u]) < 1: 
+            #     continue
 
             ## 1) GENERATE SEQUENCE
             # Reconstruct user sequence from train + valid for all 3 domains
@@ -226,12 +227,14 @@ class Trainer(object):
                         t = np.random.randint(1, self.n_items_m + 1)
                     item_idx_m.append(t)
                 pred_m = -self.model.predict(np.array([seq_m]), item_idx_m, 'm')
-                NDCG_m, HT_m, rank_m = self.calc_metrics(pred_m)
+                delta_NDCG_m, delta_HT_m, delta_rank_m = self.calc_metrics(pred_m)
+                NDCG_m += delta_NDCG_m
+                HT_m += delta_HT_m
+                rank_m += delta_rank_m
                 valid_users_m += 1
-                print(f"NDCG_m: {NDCG_m:.4f}, HT_m: {HT_m:.4f}, Rank_m {rank_m}")
+                #print(f"NDCG_m: {NDCG_m:.4f}, HT_m: {HT_m:.4f}, Rank_m {rank_m}")
             else:
                 invalid_m += 1
-                print(f"Sequence for user {u} in domain 'm' was not generated.")
 
             # Rated and item_idx for a
             if len(self.user_test_a[u]) > 0 and len(self.user_valid_a[u]) > 0:
@@ -245,12 +248,14 @@ class Trainer(object):
                         t = np.random.randint(1, self.n_items_a + 1)
                     item_idx_a.append(t)
                 pred_a = -self.model.predict(np.array([seq_a]), item_idx_a, 'a')
-                NDCG_a, HT_a, rank_a = self.calc_metrics(pred_a)
+                delta_NDCG_a, delta_HT_a, delta_rank_a = self.calc_metrics(pred_a)
+                NDCG_a += delta_NDCG_a
+                HT_a += delta_HT_a
+                rank_a += delta_rank_a
                 valid_users_a += 1
-                print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}, Rank_a {rank_a}")
+                #print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}, Rank_a {rank_a}")
             else:
                 invalid_a += 1
-                print(f"Sequence for user {u} in domain 'a' was not generated.")
 
             # Rated and item_idx for b
             if len(self.user_test_b[u]) > 0 and len(self.user_valid_b[u]) > 0:
@@ -264,24 +269,30 @@ class Trainer(object):
                         t = np.random.randint(1, self.n_items_b + 1)
                     item_idx_b.append(t)
                 pred_b = -self.model.predict(np.array([seq_b]), item_idx_b, 'b')
-                NDCG_b, HT_b, rank_b = self.calc_metrics(pred_b)
+                delta_NDCG_b, delta_HT_b, delta_rank_b = self.calc_metrics(pred_b)
+                NDCG_b += delta_NDCG_b
+                HT_b += delta_HT_b
+                rank_b += delta_rank_b
                 valid_users_b += 1
-                print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}, Rank_b {rank_b}")
+                #print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}, Rank_b {rank_b}")
             else:
                 invalid_b += 1
-                print(f"Sequence for user {u} in domain 'b' was not generated.")
-                
-        # Calculate validation loss
+                        # Calculate validation loss
         if valid_users_m > 0:
             NDCG_m = NDCG_m / valid_users_m
             HT_m = HT_m / valid_users_m
+            rank_m = rank_m / valid_users_m  # Add rank averaging for domain m
+
         if valid_users_a > 0:
             NDCG_a = NDCG_a / valid_users_a
             HT_a = HT_a / valid_users_a
+            rank_a = rank_a / valid_users_a  # Add rank averaging for domain a
+
         if valid_users_b > 0:
             NDCG_b = NDCG_b / valid_users_b
             HT_b = HT_b / valid_users_b
-        print(f"M: {valid_users_m} / {invalid_m + valid_users_m} NDCG_m: {NDCG_m}, HT_m: {HT_m}, " | f"A: {valid_users_a} / {invalid_a + valid_users_a} NDCG_a: {NDCG_a}, HT_a: {HT_a}, " | f"B: {valid_users_b} / {invalid_b + valid_users_b} NDCG_b: {NDCG_b}, HT_b: {HT_b}")
+            rank_b = rank_b / valid_users_b  # Add rank averaging for domain b
+        print(f"M: {valid_users_m} / {invalid_m + valid_users_m} NDCG_m: {NDCG_m}, HT_m: {HT_m}, avgrank_m: {rank_m}", " | " , f"A: {valid_users_a} / {invalid_a + valid_users_a} NDCG_a: {NDCG_a}, HT_a: {HT_a}, avgrank_a: {rank_a}", " | ", f"B: {valid_users_b} / {invalid_b + valid_users_b} NDCG_b: {NDCG_b}, HT_b: {HT_b}, avgrank_b: {rank_b}")
         return NDCG_m, HT_m
 
     def calc_metrics(self, pred, target_rank = 10):
@@ -297,8 +308,6 @@ class Trainer(object):
     def generate_test_sequence(self, user_test, user_train, user_valid, maxlen):
         if len(user_test) < 1:
             return False 
-        print("len ut", len(user_test))
-        print("len uv", len(user_valid))
         seq = np.zeros([maxlen], dtype=np.int32)
         idx = maxlen - 1
         seq[idx] = user_valid[0]
