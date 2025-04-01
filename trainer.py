@@ -196,7 +196,8 @@ class Trainer(object):
         self.model.eval()
 
         NDCG, HT = 0.0, 0.0
-        valid_user= 0
+        valid_users_m, valid_users_a, valid_users_b= 0, 0, 0 
+        invalid_m, invalid_a, invalid_b = 0, 0, 0
 
         users = range(self.n_users)
         print("len(self.user_test_m)", len(self.user_test_m))
@@ -226,8 +227,10 @@ class Trainer(object):
                     item_idx_m.append(t)
                 pred_m = -self.model.predict(np.array([seq_m]), item_idx_m, 'm')
                 NDCG_m, HT_m, rank_m = self.calc_metrics(pred_m)
+                valid_users_m += 1
                 print(f"NDCG_m: {NDCG_m:.4f}, HT_m: {HT_m:.4f}, Rank_m {rank_m}")
             else:
+                invalid_m += 1
                 print(f"Sequence for user {u} in domain 'm' was not generated.")
 
             # Rated and item_idx for a
@@ -243,8 +246,10 @@ class Trainer(object):
                     item_idx_a.append(t)
                 pred_a = -self.model.predict(np.array([seq_a]), item_idx_a, 'a')
                 NDCG_a, HT_a, rank_a = self.calc_metrics(pred_a)
-                print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}, Rank_a {rank_m}")
+                valid_users_a += 1
+                print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}, Rank_a {rank_a}")
             else:
+                invalid_a += 1
                 print(f"Sequence for user {u} in domain 'a' was not generated.")
 
             # Rated and item_idx for b
@@ -260,20 +265,23 @@ class Trainer(object):
                     item_idx_b.append(t)
                 pred_b = -self.model.predict(np.array([seq_b]), item_idx_b, 'b')
                 NDCG_b, HT_b, rank_b = self.calc_metrics(pred_b)
-                print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}, Rank_b {rank_m}")
+                valid_users_b += 1
+                print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}, Rank_b {rank_b}")
             else:
+                invalid_b += 1
                 print(f"Sequence for user {u} in domain 'b' was not generated.")
-
-            valid_user += 1
-            # if valid_user % 100 == 0:
-            #     print('.', end="")
-            #     sys.stdout.flush()
                 
         # Calculate validation loss
-        if valid_user > 0:
-            NDCG = NDCG / valid_user
-            HT = HT / valid_user
-
+        if valid_users_m > 0:
+            NDCG_m = NDCG_m / valid_users_m
+            HT_m = HT_m / valid_users_m
+        if valid_users_a > 0:
+            NDCG_a = NDCG_a / valid_users_a
+            HT_a = HT_a / valid_users_a
+        if valid_users_b > 0:
+            NDCG_b = NDCG_b / valid_users_b
+            HT_b = HT_b / valid_users_b
+        print(f"M: {valid_users_m} / {invalid_m + valid_users_m} NDCG_m: {NDCG_m}, HT_m: {HT_m}, " | f"A: {valid_users_a} / {invalid_a + valid_users_a} NDCG_a: {NDCG_a}, HT_a: {HT_a}, " | f"B: {valid_users_b} / {invalid_b + valid_users_b} NDCG_b: {NDCG_b}, HT_b: {HT_b}")
         return NDCG_m, HT_m
 
     def calc_metrics(self, pred, target_rank = 10):
