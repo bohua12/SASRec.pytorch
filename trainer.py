@@ -227,6 +227,7 @@ class Trainer(object):
         predictions = predictions[0]
 
         rank = predictions.argsort().argsort()[0].item()
+        print("RANK", rank)
 
         valid_user += 1
 
@@ -236,6 +237,8 @@ class Trainer(object):
         if valid_user % 100 == 0:
             print('.', end="")
             sys.stdout.flush()
+        print(f"NDCG: {NDCG}, HT: {HT}")
+
                 
         # Calculate validation loss
         if valid_user > 0:
