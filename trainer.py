@@ -182,62 +182,62 @@ class Trainer(object):
             if len(self.user_test_m[u]) < 1: 
                 continue
 
-        # Reconstruct user sequence from train + valid for all 3 domains
-        # seq[] = train[u] + valid[u] (then we predict test[u])
-        seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
-        idx_m = self.args.maxlen - 1
-        seq_m[idx_m] = self.user_valid_m[u][0]
-        idx_m -= 1
-        for i in reversed(self.user_train_m[u]):
-            seq_m[idx_m] = i
+            # Reconstruct user sequence from train + valid for all 3 domains
+            # seq[] = train[u] + valid[u] (then we predict test[u])
+            seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
+            idx_m = self.args.maxlen - 1
+            seq_m[idx_m] = self.user_valid_m[u][0]
             idx_m -= 1
-            if idx_m == -1: break
+            for i in reversed(self.user_train_m[u]):
+                seq_m[idx_m] = i
+                idx_m -= 1
+                if idx_m == -1: break
 
-        seq_a = np.zeros([self.args.maxlen], dtype=np.int32)
-        idx_a = self.args.maxlen - 1
-        if len(self.user_valid_a[u]) > 0:
-            seq_a[idx_a] = self.user_valid_a[u][0]
-            idx_a -= 1
-        for i in reversed(self.user_train_a[u]):
-            seq_a[idx_a] = i
-            idx_a -= 1
-            if idx_a == -1: break
+            seq_a = np.zeros([self.args.maxlen], dtype=np.int32)
+            idx_a = self.args.maxlen - 1
+            if len(self.user_valid_a[u]) > 0:
+                seq_a[idx_a] = self.user_valid_a[u][0]
+                idx_a -= 1
+            for i in reversed(self.user_train_a[u]):
+                seq_a[idx_a] = i
+                idx_a -= 1
+                if idx_a == -1: break
 
-        seq_b = np.zeros([self.args.maxlen], dtype=np.int32)
-        idx_b = self.args.maxlen - 1
-        if len(self.user_valid_b[u]) > 0:
-            seq_b[idx_b] = self.user_valid_b[u][0]
-            idx_b -= 1
-        for i in reversed(self.user_train_b[u]):
-            seq_b[idx_b] = i
-            idx_b -= 1
-            if idx_b == -1: break
+            seq_b = np.zeros([self.args.maxlen], dtype=np.int32)
+            idx_b = self.args.maxlen - 1
+            if len(self.user_valid_b[u]) > 0:
+                seq_b[idx_b] = self.user_valid_b[u][0]
+                idx_b -= 1
+            for i in reversed(self.user_train_b[u]):
+                seq_b[idx_b] = i
+                idx_b -= 1
+                if idx_b == -1: break
 
-        rated = set(self.user_train_m[u])
-        rated.add(0)
-        item_idx = [self.user_test_m[u][0]]
+            rated = set(self.user_train_m[u])
+            rated.add(0)
+            item_idx = [self.user_test_m[u][0]]
 
-        for _ in range(100):
-            t = np.random.randint(1, self.n_items_m + 1)
-            while t in rated: 
+            for _ in range(100):
                 t = np.random.randint(1, self.n_items_m + 1)
-            item_idx.append(t)
+                while t in rated: 
+                    t = np.random.randint(1, self.n_items_m + 1)
+                item_idx.append(t)
 
-        predictions = -self.model.predict(u, np.array([seq_m]), np.array([seq_a]), np.array([seq_b]), item_idx)
-        predictions = predictions[0]
+            predictions = -self.model.predict(u, np.array([seq_m]), np.array([seq_a]), np.array([seq_b]), item_idx)
+            predictions = predictions[0]
 
-        rank = predictions.argsort().argsort()[0].item()
-        print("RANK", rank)
+            rank = predictions.argsort().argsort()[0].item()
+            print("RANK", rank)
 
-        valid_user += 1
+            valid_user += 1
 
-        if rank < 10:
-            NDCG += 1 / np.log2(rank + 2)
-            HT += 1
-        if valid_user % 100 == 0:
-            print('.', end="")
-            sys.stdout.flush()
-        print(f"NDCG: {NDCG}, HT: {HT}")
+            if rank < 10:
+                NDCG += 1 / np.log2(rank + 2)
+                HT += 1
+            if valid_user % 100 == 0:
+                print('.', end="")
+                sys.stdout.flush()
+            print(f"NDCG: {NDCG}, HT: {HT}")
 
                 
         # Calculate validation loss
