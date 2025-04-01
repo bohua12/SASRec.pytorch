@@ -187,8 +187,15 @@ class CDSR(torch.nn.Module):
 
         return logits_m,logits_a,logits_b
     
-    def predict(self, seq, item_idx): # for inference
-        log_feats = self.encoder(*self.generate_input_embedding(seq))
+    def predict(self, seq, item_idx, domain):
+        if domain == "m":
+            log_feats = self.encoder_m(*self.generate_input_embedding(seq))
+            print("dom a")
+        elif domain == "a":
+            log_feats = self.encoder_a(*self.generate_input_embedding(seq))
+            print("dom m")
+        else:
+            log_feats = self.encoder_b(*self.generate_input_embedding(seq))
 
         final_feat = log_feats[:, -1, :]
 
