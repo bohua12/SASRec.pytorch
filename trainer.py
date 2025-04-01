@@ -100,11 +100,12 @@ class Trainer(object):
         tuple[int]: (NDCG@10, HitRate@10, average validation loss)
     """
     def run_valid(self, i):
-        print(f"Validating on epoch {i}...", end="")
+        print(f"Validating on epoch {i}")
 
         self.model.eval()
 
         NDCG_m, HT_m, NDCG_a, HT_a, NDCG_b, HT_b = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 
+        invalid_m, invalid_a, invalid_b = 0, 0, 0
         valid_users_m, valid_users_b, valid_users_a = 0, 0, 0
         num_samples_m, num_samples_a, num_samples_b = 0, 0, 0
         val_loss_m, val_loss_a, val_loss_b = 0.0, 0.0, 0.0
@@ -197,13 +198,13 @@ class Trainer(object):
             NDCG_a = NDCG_a / valid_users_a
             HT_a = HT_a / valid_users_a
             rank_a = rank_a / valid_users_a  # Add rank averaging for domain a
-            val_loss_m = val_loss_m / valid_users_m
+            val_loss_a = val_loss_a / valid_users_a
 
         if valid_users_b > 0:
             NDCG_b = NDCG_b / valid_users_b
             HT_b = HT_b / valid_users_b
             rank_b = rank_b / valid_users_b  # Add rank averaging for domain b
-            val_loss_m = val_loss_m / valid_users_m
+            val_loss_b = val_loss_b / valid_users_b
                 
         print(f"M: {valid_users_m} / {invalid_m + valid_users_m} NDCG_m: {NDCG_m}, HT_m: {HT_m}, avgrank_m: {rank_m}, val_loss_m: {val_loss_m}")
         print(f"A: {valid_users_a} / {invalid_a + valid_users_a} NDCG_a: {NDCG_a}, HT_a: {HT_a}, avgrank_a: {rank_a}, val_loss_a: {val_loss_a}")
@@ -211,7 +212,7 @@ class Trainer(object):
         return NDCG_m, HT_m, val_loss_m
 
     def run_test(self, i):
-        print(f"Testing on epoch {i}...", end="")
+        print(f"Testing on epoch {i}...")
 
         self.model.eval()
 
@@ -221,9 +222,6 @@ class Trainer(object):
         rank_m, rank_a, rank_b = 0,0,0
 
         users = range(self.n_users)
-        print("len(self.user_test_m)", len(self.user_test_m))
-        print("len(self.user_test_a)", len(self.user_test_a))
-        print("len(self.user_test_b)", len(self.user_test_b))
 
         for u in users:
             # if len(self.user_test_m[u]) < 1: 
@@ -312,7 +310,9 @@ class Trainer(object):
             NDCG_b = NDCG_b / valid_users_b
             HT_b = HT_b / valid_users_b
             rank_b = rank_b / valid_users_b  # Add rank averaging for domain b
-        print(f"M: {valid_users_m} / {invalid_m + valid_users_m} NDCG_m: {NDCG_m}, HT_m: {HT_m}, avgrank_m: {rank_m}", " | " , f"A: {valid_users_a} / {invalid_a + valid_users_a} NDCG_a: {NDCG_a}, HT_a: {HT_a}, avgrank_a: {rank_a}", " | ", f"B: {valid_users_b} / {invalid_b + valid_users_b} NDCG_b: {NDCG_b}, HT_b: {HT_b}, avgrank_b: {rank_b}")
+        print(f"M: {valid_users_m} / {invalid_m + valid_users_m} NDCG_m: {NDCG_m}, HT_m: {HT_m}, avgrank_m: {rank_m}")
+        print(f"A: {valid_users_a} / {invalid_a + valid_users_a} NDCG_a: {NDCG_a}, HT_a: {HT_a}, avgrank_a: {rank_a}")
+        print(f"B: {valid_users_b} / {invalid_b + valid_users_b} NDCG_b: {NDCG_b}, HT_b: {HT_b}, avgrank_b: {rank_b}")        
         return NDCG_m, HT_m
 
     def calc_metrics(self, pred, target_rank = 10):
@@ -350,6 +350,7 @@ class Trainer(object):
         return seq
     
     def calc_val_loss(self, predictions):
+        predictions = predictions[0]
         pos_logits = (-predictions[0]).unsqueeze(0)  # First item is the ground truth
         neg_logits = -predictions[1:]  # Remaining 100 are negative samples
         pos_label = torch.tensor([1.0], device=self.args.device)
