@@ -210,91 +210,71 @@ class Trainer(object):
             ## 1) GENERATE SEQUENCE
             # Reconstruct user sequence from train + valid for all 3 domains
             # seq[] = train[u] + valid[u] (then we predict test[u])
-            seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx_m = self.args.maxlen - 1
-            seq_m[idx_m] = self.user_valid_m[u][0]
-            idx_m -= 1
-            for i in reversed(self.user_train_m[u]):
-                seq_m[idx_m] = i
-                idx_m -= 1
-                if idx_m == -1: break
+            seq_m = self.generate_test_sequence(self.user_test_m[u], self.user_train_m[u], self.user_valid_m[u], self.args.maxlen)
+            seq_a = self.generate_test_sequence(self.user_test_a[u], self.user_train_a[u], self.user_valid_a[u], self.args.maxlen)
+            seq_b = self.generate_test_sequence(self.user_test_b[u], self.user_train_b[u], self.user_valid_b[u], self.args.maxlen)
 
-            seq_a = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx_a = self.args.maxlen - 1
-            if len(self.user_valid_a[u]) > 0:
-                seq_a[idx_a] = self.user_valid_a[u][0]
-                idx_a -= 1
-            for i in reversed(self.user_train_a[u]):
-                seq_a[idx_a] = i
-                idx_a -= 1
-                if idx_a == -1: break
-
-            seq_b = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx_b = self.args.maxlen - 1
-            if len(self.user_valid_b[u]) > 0:
-                seq_b[idx_b] = self.user_valid_b[u][0]
-                idx_b -= 1
-            for i in reversed(self.user_train_b[u]):
-                seq_b[idx_b] = i
-                idx_b -= 1
-                if idx_b == -1: break
 
             ## 2) RATE ITEM
             # Rated and item_idx for m
-            rated_m = set(self.user_train_m[u])
-            rated_m.add(0)
-            item_idx_m = [self.user_test_m[u][0]]
-            for _ in range(100): # Select 100 random item not in this domain
-                t = np.random.randint(1, self.n_items_m + 1)
-                while t in rated_m: 
+            if seq_m:
+                rated_m = set(self.user_train_m[u])
+                rated_m.add(0)
+                item_idx_m = [self.user_test_m[u][0]]
+                for _ in range(100): # Select 100 random item not in this domain
                     t = np.random.randint(1, self.n_items_m + 1)
-                item_idx_m.append(t)
+                    while t in rated_m: 
+                        t = np.random.randint(1, self.n_items_m + 1)
+                    item_idx_m.append(t)
+                pred_m = -self.model.predict(np.array([seq_m]), item_idx_m)
+                NDCG_m, HT_m, rank_m = self.calc_metrics(pred_m)
+                print(f"NDCG_m: {NDCG_m:.4f}, HT_m: {HT_m:.4f}, Rank_m {rank_m}")
+            else:
+                print(f"Sequence for user {u} in domain 'm' was not generated.")
 
             # Rated and item_idx for a
-            rated_a = set(self.user_train_a[u])
-            rated_a.add(0)
-            item_idx_a = [self.user_test_a[u][0]]
-            for _ in range(100):
-                t = np.random.randint(1, self.n_items_a + 1)
-                while t in rated_a: 
+            if seq_a:
+                rated_a = set(self.user_train_a[u])
+                rated_a.add(0)
+                item_idx_a = [self.user_test_a[u][0]]
+                for _ in range(100):
                     t = np.random.randint(1, self.n_items_a + 1)
-                item_idx_a.append(t)
+                    while t in rated_a: 
+                        t = np.random.randint(1, self.n_items_a + 1)
+                    item_idx_a.append(t)
+                pred_a = -self.model.predict(np.array([seq_a]), item_idx_a)
+                NDCG_a, HT_a, rank_a = self.calc_metrics(pred_a)
+                print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}, Rank_a {rank_m}")
+            else:
+                print(f"Sequence for user {u} in domain 'a' was not generated.")
 
             # Rated and item_idx for b
-            rated_b = set(self.user_train_b[u])
-            rated_b.add(0)
-            item_idx_b = [self.user_test_b[u][0]]
-            for _ in range(100):
-                t = np.random.randint(1, self.n_items_b + 1)
-                while t in rated_b: 
+            if seq_b:
+                rated_b = set(self.user_train_b[u])
+                rated_b.add(0)
+                item_idx_b = [self.user_test_b[u][0]]
+                for _ in range(100):
                     t = np.random.randint(1, self.n_items_b + 1)
-                item_idx_b.append(t)
+                    while t in rated_b: 
+                        t = np.random.randint(1, self.n_items_b + 1)
+                    item_idx_b.append(t)
+                pred_b = -self.model.predict(np.array([seq_b]), item_idx_b)
+                NDCG_b, HT_b, rank_b = self.calc_metrics(pred_b)
+                print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}, Rank_b {rank_m}")
+            else:
+                print(f"Sequence for user {u} in domain 'b' was not generated.")
 
-            ## GENERATE RANK
-            pred_m, pred_a, pred_b = -self.model.predict(u, np.array([seq_m]), np.array([seq_a]), np.array([seq_b]), item_idx_m, item_idx_a, item_idx_b)
-            NDCG_m, HT_m, rank_m = self.calc_metrics(pred_m)
-            NDCG_a, HT_a, rank_a = self.calc_metrics(pred_a)
-            NDCG_b, HT_b, rank_b = self.calc_metrics(pred_b)
-
-            print(f"NDCG_m: {NDCG_m:.4f}, HT_m: {HT_m:.4f}")
-            print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}")
-            print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}")
-            
-            print(f"Rank M: {rank_m}, Rank A: {rank_a}, Rank B: {rank_b}")
             valid_user += 1
-
-
             # if valid_user % 100 == 0:
             #     print('.', end="")
             #     sys.stdout.flush()
-
                 
         # Calculate validation loss
         if valid_user > 0:
             NDCG = NDCG / valid_user
             HT = HT / valid_user
 
-        return NDCG, HT
+        return NDCG_m, HT_m
 
     def calc_metrics(prep, target_rank = 10):
         pred = pred[0]  # remove batch dimension
@@ -303,3 +283,17 @@ class Trainer(object):
             NDCG += 1 / np.log2(rank + 2)
             HT += 1
         return NDCG, HT, rank
+    
+    def generate_test_sequence(user_test, user_train, user_valid, maxlen):
+        if len(user_test) < 1:
+            return False 
+        seq = np.zeros([maxlen], dtype=np.int32)
+        idx = maxlen - 1
+        seq[idx] = user_valid[0]
+        idx -= 1
+        for i in reversed(user_train):
+            seq[idx] = i
+            idx -= 1
+            if idx == -1:
+                break
+        return seq
