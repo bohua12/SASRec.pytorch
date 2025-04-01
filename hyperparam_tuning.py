@@ -1,14 +1,14 @@
 import itertools
-import torch
 from utils import *
-from model import SASRec
-from torch.utils.data import DataLoader
+from utils.dataloader import data_partition, get_dataloader
+from trainer import Trainer
 import argparse
+import numpy as np
 
 # Define hyperparameter grid search space
-hidden_units = [8, 16, 32, 64, 128 ,256]
-lrs = [0.01, 0.001, 0.0001]
-dropout_rates = [0.1, 0.2, 0.3, 0.4]
+hidden_units = [32, 64, 128] 
+lrs = [0.01, 0.001, 0.0001] # Dont try 0.01
+dropout_rates = [0.1, 0.2, 0.3, 0.4] # Sometimes even up to 0.9
 weight_decays = [1e-4, 1e-3, 1e-2]
 
 # Initialise Cmd Line args
@@ -22,19 +22,28 @@ parser.add_argument('--num_blocks', default=2, type=int)
 parser.add_argument('--num_heads', default=1, type=int)
 parser.add_argument('--l2_emb', default=0.0, type=float)
 args = parser.parse_args()
-
+print("Hyperparameter tuning")
 # Load dataset 
-dataset = data_partition(args.dataset)
-[user_train, user_valid, user_test, usernum, itemnum] = dataset
-ds = SASRecDataset(user_train, usernum, itemnum, maxlen=args.maxlen)
-dataloader = DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
+print("Loading data...")
+
+# Load and Split data into Train/Test/Valid
+[
+user_train_m, user_valid_m, user_test_m,
+user_train_a, user_valid_a, user_test_a,
+user_train_b, user_valid_b, user_test_b,
+n_users, n_items_m, n_items_a, n_items_b
+] = data_partition("abe", "abe_50_preprocessed.txt", args)
+
+# Get dataloader for training dataset
+dl = get_dataloader(user_train_m, user_train_a, user_train_b, n_users, n_items_m, n_items_a, n_items_b, args)
+print("Data loaded successfully!\n")
 
 # Tuning Loop
 best_val_metrics = [-1,-1,999]
 best_params = {}
-num_tuning_epochs = 5
+num_tuning_epochs = 30
 
-with open("best_params.txt", "w") as f:
+with open("best_params_30epochs.txt", "w") as f:
     for hidden, lr, dropout, weight_decay in itertools.product(hidden_units, lrs, dropout_rates, weight_decays):
         # Update args values dynamically 
         args.hidden_units = hidden
@@ -42,35 +51,23 @@ with open("best_params.txt", "w") as f:
         args.dropout_rate = dropout
         args.weight_decay = weight_decay
 
-        # Initialize model
-        model = SASRec(usernum, itemnum, args).to(args.device)
-        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+        # LOAD MODEL
+        trainer = Trainer(args)
 
-        # Quick training loop (train for a few mini-batches), breaks after 10 steps
-        model.train()
         for epoch in range(num_tuning_epochs):
-            for step, (u, seq, pos, neg) in enumerate(dataloader):
-                u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
-                optimizer.zero_grad()
-                pos_logits, neg_logits = model(u, seq, pos, neg)
-                pos_labels, neg_labels = torch.ones_like(pos_logits), torch.zeros_like(neg_logits)
-                loss = torch.nn.BCEWithLogitsLoss()(pos_logits, pos_labels) + torch.nn.BCEWithLogitsLoss()(neg_logits, neg_labels)
-                loss.backward()
-                optimizer.step()
+            epoch_train_loss = trainer.run_epoch(epoch)
 
-        # Evaluate on validation set
-        model.eval()
-        val_metrics = evaluate_valid(model, dataset, args)
-        print(f"Testing: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}")
-        f.write(f"Tested: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}; {val_metrics}\n")
-        
+        val_metrics = trainer.run_valid(30)
+        print(f"Validation: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}")
+        f.write(f"Validation: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}; {val_metrics}\n")
+
         # Save best hyperparameters
         ## TODO: Change to [0] and reverse < if want to do selection through NDCG !
         if val_metrics[2] < best_val_metrics[2]:
             best_val_metrics = val_metrics
             best_params = {"hidden_units": hidden, "lr": lr, "dropout_rate": dropout, "weight_decay": weight_decay}
             f.write(f"Best so far: {best_params}\n {val_metrics} \n")
-            print(f"!!!!!!!! This itr is the best so far with these metrics {val_metrics} !!!!!!!!!\n")
+            print(f">>> This itr is the best so far with these metrics {val_metrics} <<<\n")
     f.write(f"Best OVERALL: {best_params}\n {best_val_metrics} \n")
 
 print("Best hyperparams:", best_params, best_val_metrics)

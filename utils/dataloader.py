@@ -10,7 +10,7 @@ def collate_identity(batch):
     return tuple(np.stack(t) for t in zip(*batch))
 
 
-def data_partition_new(fname, fraw, args):
+def data_partition(fname, fraw, args):
     with open(join("data", fname, 'map_item.txt'), 'r') as f:
         map_i = json.load(f)
         list_dm = np.array(list(map_i.values()))[:, 1] # Slice out just domain col
@@ -81,7 +81,7 @@ def data_partition_new(fname, fraw, args):
     )
 
 """Simple, split into train/test/valid"""
-def data_partition(fname):
+def data_partition_old(fname):
     usernum = 0
     itemnum = 0
     User = defaultdict(list)
@@ -114,11 +114,11 @@ def data_partition(fname):
             user_test[user].append(User[user][-1])
     return [user_train, user_valid, user_test, usernum, itemnum]
 
-def get_dataloader(user_train, usernum, itemnum, args):
+def get_dataloader_old(user_train, usernum, itemnum, args):
     ds = SASRecDataset(user_train, usernum, itemnum, args.maxlen)
     return DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
-def get_dataloader_cdsr(train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args):
+def get_dataloader(train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args):
     ds = CDSRDataset(train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args)
     return DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0, collate_fn=collate_identity)
 
