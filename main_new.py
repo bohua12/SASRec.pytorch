@@ -19,7 +19,7 @@ parser.add_argument('--train_dir', required=True)
 parser.add_argument('--batch_size', default=128, type=int)
 parser.add_argument('--lr', default=0.01, type=float)
 parser.add_argument('--maxlen', default=200, type=int)
-parser.add_argument('--hidden_units', default=64, type=int)
+parser.add_argument('--hidden_units', default=128, type=int)
 parser.add_argument('--num_blocks', default=2, type=int)
 parser.add_argument('--num_epochs', default=1000, type=int)
 parser.add_argument('--num_heads', default=1, type=int)
@@ -31,6 +31,7 @@ parser.add_argument('--device', default='cuda', type=str)
 parser.add_argument('--weight_decay', default=1e-2, type=float)
 parser.add_argument('--verification_frequency', default=5, type=int)
 parser.add_argument('--early_stopping_patience', default=50, type=int)
+parser.add_argument('--verbose', default=0, type=int)
 
 
 # Create Training Directory

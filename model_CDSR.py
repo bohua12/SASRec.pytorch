@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-""" Why this one need create our own instead of just using torch lib?"""
+""" Called by __init__ in CDSR for nLayer times"""
 class PointWiseFeedForward(torch.nn.Module):
     def __init__(self, hidden_units, dropout_rate):
 
@@ -19,32 +19,15 @@ class PointWiseFeedForward(torch.nn.Module):
         outputs = outputs.transpose(-1, -2) # as Conv1D requires (N, C, Length)
         outputs += inputs
         return outputs
+    
 
-# pls use the following self-made multihead attention layer
-# in case your pytorch version is below 1.16 or for other reasons
-# https://github.com/pmixer/TiSASRec.pytorch/blob/master/model.py
+class Encoder(torch.nn.Module):
+    def __init__(self, args):
+        super().__init__()
+        self.args = args
+        self.emb_dropout = torch.nn.Dropout(p=args.dropout_rate)
 
-class CDSR(torch.nn.Module):
-    def __init__(self, user_num, item_num, args):
-        super(CDSR, self).__init__()
-
-        self.user_num = user_num
-        self.item_num = item_num
-        self.dev = args.device ## CUDA or CPU
-
-
-        # TODO: loss += args.l2_emb for regularizing embedding vectors during training
-        # https://stackoverflow.com/questions/42704283/adding-l1-l2-regularization-in-pytorch
-        ## IIIA: Embedding Layer - Create item embedding (represent item)
-        self.item_emb = torch.nn.Embedding(self.item_num+1, args.hidden_units, padding_idx=0)
-        ## IIIA: Embedding Layer-Positional Embedding - Create Positional Embedding (Because of nature of self-attention module)
-        self.pos_emb = torch.nn.Embedding(args.maxlen+1, args.hidden_units, padding_idx=0)
-        ## IIIC: Stacking Self-Attention Blocks-Dropout - alleviate overfitting in Deep NN (randomly turn off neurons)
-        self.emb_dropout = torch.nn.Dropout(p=args.dropout_rate) # Set to 0.2 on default
-
-        # BASICALLY: ... = torch.nn.ModuleList() is basically ... = [], except there are reason why we do the former!!! Understoof
         ## Self-Attention layers
-        ## IIIC: Stacking Self-Attention Blocks-Layer Normalization: Normalise input
         self.attention_layernorms = torch.nn.ModuleList() # Normalise inputs before selfattention
         self.attention_layers = torch.nn.ModuleList() # Store multiple self-attention laters
 
@@ -53,8 +36,8 @@ class CDSR(torch.nn.Module):
         self.forward_layernorms = torch.nn.ModuleList() # Store layer normalisation layers
         self.forward_layers = torch.nn.ModuleList() # Stores actual FFN
 
-        ## IIID: Prediction Layer-Explicit User Modeling: Insert explicit user embedding at last layer (idgi, not even sure if its this one!)
-        self.last_layernorm = torch.nn.LayerNorm(args.hidden_units, eps=1e-8)
+        ## IIID: Prediction Layer-Explicit User Modeling: Insert explicit user embedding at last layer 
+        self.last_layernorm = torch.nn.LayerNorm(args.hidden_units, eps=1e-8) 
 
         ## IIIB: Self-Attention Block - Creating num_blocks number of self-attention blocks!
         ## TODO: QN: IS this the entire self-attention block? 
@@ -76,65 +59,110 @@ class CDSR(torch.nn.Module):
             new_fwd_layer = PointWiseFeedForward(args.hidden_units, args.dropout_rate)
             self.forward_layers.append(new_fwd_layer)
 
-            # self.pos_sigmoid = torch.nn.Sigmoid()
-            # self.neg_sigmoid = torch.nn.Sigmoid()
+    """ Pass in seqs and poss processed up till emb_dropout"""
+    def forward(self, seqs, poss):
+        tl = seqs.shape[1]
+        attention_mask = ~torch.tril(torch.ones((tl, tl), dtype=torch.bool, device=self.args.device))
 
-    """ Convert user interaction sequence (log) to features (feats)"""
-    """ log = logged sequence, ie. user's interaction history"""
-    """ feats = features, ie. embedding/hidden states"""
-    def log2feats(self, log_seqs): # TODO: fp64 and int64 as default in python, trim?
-        ## Get embedding from item_emb (declared at __init__)
-        ## Seqs is hidden representation of user's interaction; Built from item + positional embedding
-        seqs = self.item_emb(torch.LongTensor(log_seqs).to(self.dev))
-        seqs *= self.item_emb.embedding_dim ** 0.5  # Sqrt to prevent Gradient Explosion
-
-        ## Poss is positional embedding for input sequence to incorporate order info; to be used later in pos_emb
-        poss = np.tile(np.arange(1, log_seqs.shape[1] + 1), [log_seqs.shape[0], 1])
-        poss *= (log_seqs != 0)
-
-        ## IIIA: Embedding Layer-Positional Embedding - Create Positional Embedding (Because of nature of self-attention module)
-        seqs += self.pos_emb(torch.LongTensor(poss).to(self.dev))
-
-        ## IIIC: Stacking Self-Attention Blocks-Dropout - alleviate overfitting in Deep NN (randomly turn off neurons)
-        seqs = self.emb_dropout(seqs)
-
-        ## Creates Attention Mask (prevent peek into future)
-        tl = seqs.shape[1] # time dim len for enforce causality
-
-        attention_mask = ~torch.tril(torch.ones((tl, tl), dtype=torch.bool, device=self.dev))
-
-        ## Feed through all the attention blocks! (Created in __init__)
         for i in range(len(self.attention_layers)):
             seqs = torch.transpose(seqs, 0, 1)
             Q = self.attention_layernorms[i](seqs)
             mha_outputs, _ = self.attention_layers[i](Q, seqs, seqs, 
                                             attn_mask=attention_mask)
                                             # need_weights=False) this arg do not work?
-            ## TODO: QN: What does this do?
-            ## whats mha_outputs, multi head attention output>
+
             seqs = Q + mha_outputs
             seqs = torch.transpose(seqs, 0, 1)
             ## FFN
             seqs = self.forward_layernorms[i](seqs)
             seqs = self.forward_layers[i](seqs)
 
-        ## IIID: Prediction Layer-Explicit User Modeling: Is it this? Insert explicit user embedding at last layer
-        log_feats = self.last_layernorm(seqs) # (U, T, C) -> (U, -1, C)
+        # Basically return log_feats?
+        return self.last_layernorm(seqs)
 
-        return log_feats
 
-    ### Seems like calculating +ve -ve sample scores
+
+# pls use the following self-made multihead attention layer
+# in case your pytorch version is below 1.16 or for other reasons
+# https://github.com/pmixer/TiSASRec.pytorch/blob/master/model.py
+class CDSR(torch.nn.Module):
+    def __init__(self, user_num, item_num_m, item_num_b, item_num_a, args):
+        super(CDSR, self).__init__()
+        self.args = args
+        self.user_num = user_num
+        self.item_num = item_num_m
+
+        ## IIIA: Embedding Layer - Create item embedding (represent item)
+        self.item_emb = torch.nn.Embedding(self.item_num+1, args.hidden_units, padding_idx=0)
+
+        ## IIIA: Embedding Layer-Positional Embedding - Create Positional Embedding (Because of nature of self-attention module)
+        self.pos_emb = torch.nn.Embedding(args.maxlen+1, args.hidden_units, padding_idx=0)
+
+        ## IIIC: Stacking Self-Attention Blocks-Dropout - alleviate overfitting in Deep NN (randomly turn off neurons)
+        self.emb_dropout = torch.nn.Dropout(p=args.dropout_rate) # Set to 0.2 on default
+
+        self.encoder_m = Encoder(args)
+        self.encoder_a = Encoder(args)
+        self.encoder_b = Encoder(args)
+
+        if args.verbose:
+            print("Positional embedding shape:", self.pos_emb.weight.shape)  # (batch_size, maxlen, hidden_units)
+            print("Item embedding shape:", self.item_emb.weight.shape)  # (batch_size, maxlen, hidden_units)
+            print("")
+            print(f"# of attention blocks: {len(self.attention_layers)}")
+            print(f"Structure of all attn layer: {self.attention_layers}")
+            print(f"Structure of first attn layer: {self.attention_layers[0]}")
+            print("")
+            print(f"Structure of all FFN layer: {self.forward_layers}")
+            print(f"Structure of first FFN layer: {self.forward_layers[0]}")
+
+
+    """ Before encoding """
+    def generate_input_embedding(self, log_seqs):
+        #print(log_seqs)
+        seqs = self.item_emb(torch.LongTensor(log_seqs).to(self.args.device))
+        seqs *= self.item_emb.embedding_dim ** 0.5  # Sqrt to prevent Gradient Explosion
+
+        poss = np.tile(np.arange(1, log_seqs.shape[1] + 1), [log_seqs.shape[0], 1])
+        poss *= (log_seqs != 0)
+
+        seqs += self.pos_emb(torch.LongTensor(poss).to(self.args.device))
+        seqs = self.emb_dropout(seqs)
+
+        return seqs, poss
+
+
     ### self.model(data)  equals to self.model.forward(data). Special situation then use this fn
-    def forward(self, user_ids, log_seqs, pos_seqs, neg_seqs): # for training        
-        log_feats = self.log2feats(log_seqs)
+    def forward(self, uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b):
 
-        pos_embs = self.item_emb(torch.LongTensor(pos_seqs).to(self.dev))
-        neg_embs = self.item_emb(torch.LongTensor(neg_seqs).to(self.dev))
+        log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m))
+        log_feats_a = self.encoder_a(*self.generate_input_embedding(seq_a))
+        log_feats_b = self.encoder_b(*self.generate_input_embedding(seq_b))
 
-        pos_logits = (log_feats * pos_embs).sum(dim=-1)
-        neg_logits = (log_feats * neg_embs).sum(dim=-1)
+        ## item_emb obj shd be reused 
+        pos_embs_m = self.item_emb(torch.LongTensor(pos_m).to(self.args.device))
+        neg_embs_m = self.item_emb(torch.LongTensor(neg_m).to(self.args.device))
+        
+        pos_embs_a = self.item_emb(torch.LongTensor(pos_a).to(self.args.device))
+        neg_embs_a = self.item_emb(torch.LongTensor(neg_a).to(self.args.device))
 
-        return pos_logits, neg_logits # pos_pred, neg_pred
+        pos_embs_b = self.item_emb(torch.LongTensor(pos_b).to(self.args.device))
+        neg_embs_b = self.item_emb(torch.LongTensor(neg_b).to(self.args.device))
+
+        # Compute logits
+        pos_logits_m = (log_feats_m * pos_embs_m).sum(dim=-1)
+        neg_logits_m = (log_feats_m * neg_embs_m).sum(dim=-1)
+
+        pos_logits_a = (log_feats_a * pos_embs_a).sum(dim=-1)
+        neg_logits_a = (log_feats_a * neg_embs_a).sum(dim=-1)
+
+        pos_logits_b = (log_feats_b * pos_embs_b).sum(dim=-1)
+        neg_logits_b = (log_feats_b * neg_embs_b).sum(dim=-1)
+
+
+        return (pos_logits_m, neg_logits_m,
+                pos_logits_a, neg_logits_a,
+                pos_logits_b, neg_logits_b)
 
     """ Seems like this function is never called anywehre..."""
     def predict(self, user_ids, log_seqs, item_indices): # for inference
@@ -142,7 +170,7 @@ class CDSR(torch.nn.Module):
 
         final_feat = log_feats[:, -1, :] # only use last QKV classifier, a waste
 
-        item_embs = self.item_emb(torch.LongTensor(item_indices).to(self.dev)) # (U, I, C)
+        item_embs = self.item_emb(torch.LongTensor(item_indices).to(self.args.device)) # (U, I, C)
 
         ## different logits between calc matrix and loss. Need diff functions
         logits = item_embs.matmul(final_feat.unsqueeze(-1)).squeeze(-1)

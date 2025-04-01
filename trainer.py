@@ -1,9 +1,10 @@
 from utils.utils import *
-from utils.dataloader import data_partition, data_partition_new, get_dataloader # STATE WHILE FN LATER!
-from model import SASRec, init_weights
+from utils.dataloader import data_partition, data_partition_new, get_dataloader, get_dataloader_cdsr # STATE WHILE FN LATER!
+from model_CDSR import CDSR, init_weights
+#from model import SASRec, init_weights
 import torch
 import os
-""" Includes data loading"""
+
 class Trainer(object):
     def __init__(self, args) -> None:
         self.args = args
@@ -17,16 +18,16 @@ class Trainer(object):
         self.user_train_b, self.user_valid_b, self.user_test_b,
         self.n_users, self.n_items_m, self.n_items_a, self.n_items_b
         ] = data_partition_new("abe", "abe_50_preprocessed.txt", args)
-        
-        # Get dataloader for training dataset
-        self.dl = get_dataloader(self.user_train, self.n_users, self.n_items, args)
-        print("Data loaded successfully!\n")
 
-        ## CONSIDER ADDING calc avg seq len here!
+        # Get dataloader for training dataset
+        #self.dl = get_dataloader(self.user_train, self.n_users, self.n_items, self.args)
+        self.dl = get_dataloader_cdsr(self.user_train_m, self.user_train_a, self.user_train_b, self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, args)
+        print("Data loaded successfully!\n")
 
         # LOAD MODEL
         print("Loading model...")
-        self.model = SASRec(self.n_users, self.n_items, args).to(args.device)
+        #self.model = SASRec(self.n_users, self.n_items, args).to(args.device)
+        self.model = CDSR(self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, self.args)
         # adam moved from later line to here!
         self.adam_optimizer = torch.optim.AdamW(self.model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
         self.bce_loss = torch.nn.BCEWithLogitsLoss() # torch.nn.BCELoss()
@@ -46,17 +47,34 @@ class Trainer(object):
         self.model.train()
         self.adam_optimizer.zero_grad()
         epoch_loss = 0
+        # for step, (u, seq, pos, neg) in enumerate(self.dl):
+        #     u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
+        #     #print(seq)
+        #     pos_logits, neg_logits = self.model(u, seq, pos, neg)
 
-        for step, (u, seq, pos, neg) in enumerate(self.dl):
+        for step, (uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b) in enumerate(self.dl):
             # TRAIN BATCH
-            u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
-            pos_logits, neg_logits = self.model(u, seq, pos, neg) # Logits: Raw score before activation fn
+            (pos_logits_m, neg_logits_m,
+            pos_logits_a, neg_logits_a,
+            pos_logits_b, neg_logits_b) = self.model(
+                                                uid, 
+                                                seq_m, pos_m, neg_m,
+                                                seq_a, pos_a, neg_a,
+                                                seq_b, pos_b, neg_b
+                                                ) # Logits: Raw score before activation fn
             
             # CALCULATE LOSS (# Consider transfering below loss calculation to another function...)
-            pos_labels, neg_labels = torch.ones(pos_logits.shape, device=self.args.device), torch.zeros(neg_logits.shape, device=self.args.device) # Assign 1 to +ve items, 0 to -ve items
-            indices = np.where(pos != 0) # "Give me positions in pos that are not padding (ie. actl items)" ; Can usethe same for pos and neg because both are generated from the same user-interaction sequence!
-            loss = self.bce_loss(pos_logits[indices], pos_labels[indices])
-            loss += self.bce_loss(neg_logits[indices], neg_labels[indices])
+            loss = 0
+            for pos_logits, neg_logits, pos in [
+                (pos_logits_m, neg_logits_m, pos_m),
+                (pos_logits_a, neg_logits_a, pos_a),
+                (pos_logits_b, neg_logits_b, pos_b)
+            ]:
+                pos_labels = torch.ones(pos_logits.shape, device=self.args.device)
+                neg_labels = torch.zeros(neg_logits.shape, device=self.args.device)
+                indices = np.where(np.array(pos) != 0)  # Only non-padding positions
+                loss += self.bce_loss(pos_logits[indices], pos_labels[indices])
+                loss += self.bce_loss(neg_logits[indices], neg_labels[indices])
 
             # BACKWARD PROP
             loss.backward()
@@ -156,44 +174,68 @@ class Trainer(object):
         valid_user= 0
 
         users = range(self.n_users)
-
+        print("len(self.user_test_m)", len(self.user_test_a))
+        print("len(self.user_test_a)", len(self.user_test_a))
+        print("len(self.user_test_b)", len(self.user_test_a))
         # Reconstruct user sequence from train + valid
         # seq[] = train[u] + valid[u] (then we predict test[u])
         for u in users:
-            if len(self.user_test[u]) < 1: 
+            if len(self.user_test_m[u]) < 1: 
                 continue
 
-            seq = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx = self.args.maxlen - 1
-            seq[idx] = self.user_valid[u][0]
-            idx -=1
-            for i in reversed(self.user_train[u]):
-                seq[idx] = i
-                idx -= 1
-                if idx == -1: break
+        # Reconstruct test sequence for all 3 domains
+        seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
+        idx_m = self.args.maxlen - 1
+        seq_m[idx_m] = self.user_valid_m[u][0]
+        idx_m -= 1
+        for i in reversed(self.user_train_m[u]):
+            seq_m[idx_m] = i
+            idx_m -= 1
+            if idx_m == -1: break
 
-            rated = set(self.user_train[u])
-            rated.add(0)
-            item_idx = [self.user_valid[u][0]]
-            for _ in range(100):
+        seq_a = np.zeros([self.args.maxlen], dtype=np.int32)
+        idx_a = self.args.maxlen - 1
+        if len(self.user_valid_a[u]) > 0:
+            seq_a[idx_a] = self.user_valid_a[u][0]
+            idx_a -= 1
+        for i in reversed(self.user_train_a[u]):
+            seq_a[idx_a] = i
+            idx_a -= 1
+            if idx_a == -1: break
+
+        seq_b = np.zeros([self.args.maxlen], dtype=np.int32)
+        idx_b = self.args.maxlen - 1
+        if len(self.user_valid_b[u]) > 0:
+            seq_b[idx_b] = self.user_valid_b[u][0]
+            idx_b -= 1
+        for i in reversed(self.user_train_b[u]):
+            seq_b[idx_b] = i
+            idx_b -= 1
+            if idx_b == -1: break
+
+        rated = set(self.user_train[u])
+        rated.add(0)
+        item_idx = [self.user_valid[u][0]]
+
+        for _ in range(100):
+            t = np.random.randint(1, self.n_items + 1)
+            while t in rated: 
                 t = np.random.randint(1, self.n_items + 1)
-                while t in rated: 
-                    t = np.random.randint(1, self.n_items + 1)
-                item_idx.append(t)
+            item_idx.append(t)
 
-            predictions = -self.model.predict(*[np.array(l) for l in [[u], [seq], item_idx]])
-            predictions = predictions[0]
+        predictions = -self.model.predict(u, np.array([seq_m]), np.array([seq_a]), np.array([seq_b]), item_idx)
+        predictions = predictions[0]
 
-            rank = predictions.argsort().argsort()[0].item()
+        rank = predictions.argsort().argsort()[0].item()
 
-            valid_user += 1
+        valid_user += 1
 
-            if rank < 10:
-                NDCG += 1 / np.log2(rank + 2)
-                HT += 1
-            if valid_user % 100 == 0:
-                print('.', end="")
-                sys.stdout.flush()
+        if rank < 10:
+            NDCG += 1 / np.log2(rank + 2)
+            HT += 1
+        if valid_user % 100 == 0:
+            print('.', end="")
+            sys.stdout.flush()
                 
         # Calculate validation loss
         if valid_user > 0:

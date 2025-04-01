@@ -3,6 +3,11 @@ import json
 from collections import defaultdict
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+import torch
+
+def collate_identity(batch):
+    # Allows us to return np.array for __getitem__, instead of tensor
+    return tuple(np.stack(t) for t in zip(*batch))
 
 
 def data_partition_new(fname, fraw, args):
@@ -11,9 +16,7 @@ def data_partition_new(fname, fraw, args):
         list_dm = np.array(list(map_i.values()))[:, 1] # Slice out just domain col
         n_items_a = np.sum(list_dm == 0) # Count how many itrems in dom a
         n_items_b = np.sum(list_dm == 1)
-    print("ell")
-    print(n_items_a)
-    print(n_items_b)
+
     User = defaultdict(list)
     user_train_a, user_valid_a, user_test_a = {}, {}, {}
     user_train_b, user_valid_b, user_test_b = {}, {}, {}
@@ -115,6 +118,10 @@ def get_dataloader(user_train, usernum, itemnum, args):
     ds = SASRecDataset(user_train, usernum, itemnum, args.maxlen)
     return DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
+def get_dataloader_cdsr(train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args):
+    ds = CDSRDataset(train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args)
+    return DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0, collate_fn=collate_identity)
+
 """ Standard implementation of abstract class Dataset, to be instantiated and used with DataLoader class"""
 class SASRecDataset(Dataset):
     def __init__(self, user_train, usernum, itemnum, maxlen):
@@ -156,7 +163,7 @@ class SASRecDataset(Dataset):
     
 
 class CDSRDataset(Dataset):
-    def __init__(self, train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, maxlen):
+    def __init__(self, train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args):
         self.train_m = train_m
         self.train_a = train_a
         self.train_b = train_b
@@ -164,7 +171,7 @@ class CDSRDataset(Dataset):
         self.itemnum_m = itemnum_m
         self.itemnum_a = itemnum_a
         self.itemnum_b = itemnum_b
-        self.maxlen = maxlen
+        self.maxlen = args.maxlen
         self.users = list(train_m.keys())  # all 3 dataset will contain all users (handled in data_partition_new)
     
     def __len__(self):
@@ -215,7 +222,18 @@ class CDSRDataset(Dataset):
         seq_a, pos_a, neg_a = self.build_sequence(self.train_a[uid], self.itemnum_a)
         seq_b, pos_b, neg_b = self.build_sequence(self.train_b[uid], self.itemnum_b)
 
-        return uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b
+        return (
+            uid,
+            seq_m,
+            pos_m,
+            neg_m,
+            seq_a,
+            pos_a,
+            neg_a,
+            seq_b,
+            pos_b,
+            neg_b
+        )
 
 # sampler for batch generation
 def random_neq(l, r, s):
