@@ -164,8 +164,8 @@ class CDSR(torch.nn.Module):
                 pos_logits_a, neg_logits_a,
                 pos_logits_b, neg_logits_b)
 
-    """ Seems like this function is never called anywehre..."""
-    def predict(self, user_ids, seq_m, seq_a, seq_b, item_idx_m, item_idx_a, item_idx_b): # for inference
+    """ Decided to switch to single predict"""
+    def predict_all_3(self, user_ids, seq_m, seq_a, seq_b, item_idx_m, item_idx_a, item_idx_b): # for inference
 
         log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m))
         log_feats_a = self.encoder_a(*self.generate_input_embedding(seq_a))
@@ -186,6 +186,19 @@ class CDSR(torch.nn.Module):
         logits_b = item_embs_b.matmul(final_feat_b.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
 
         return logits_m,logits_a,logits_b
+    
+    def predict(self, seq, item_idx): # for inference
+        log_feats = self.encoder(*self.generate_input_embedding(seq))
+
+        final_feat = log_feats[:, -1, :]
+
+        # Get item embeddings
+        item_embs = self.item_emb(torch.LongTensor(item_idx).to(self.args.device))  # (batch_size, item_count, dim)
+
+        # Predict scores
+        logits = item_embs.matmul(final_feat.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
+
+        return logits
 
 
 def init_weights(model):
