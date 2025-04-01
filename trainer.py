@@ -104,15 +104,17 @@ class Trainer(object):
 
         self.model.eval()
 
-        NDCG, HT = 0.0, 0.0
-        valid_user, num_samples = 0.0, 0
-        total_val_loss, val_loss = 0.0, 0.0
+        NDCG_m, HT_m, NDCG_a, HT_a, NDCG_b, HT_b = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 
+        valid_users_m, valid_users_b, valid_users_a = 0, 0, 0
+        num_samples_m, num_samples_a, num_samples_b = 0, 0, 0
+        val_loss_m, val_loss_a, val_loss_b = 0.0, 0.0, 0.0
+        rank_m, rank_a, rank_b = 0,0,0
+
 
         users = range(self.n_users)
 
         for u in users:
-            if len(self.user_valid_m[u]) < 1: 
-                continue
+
             # seq[] = train[u] (then we predict valid[u])
             seq = np.zeros([self.args.maxlen], dtype=np.int32)
             idx = self.args.maxlen - 1
@@ -121,73 +123,95 @@ class Trainer(object):
                 idx -= 1
                 if idx == -1: break
 
-            seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx_m = self.args.maxlen - 1
-            for i in reversed(self.user_train_m[u]):
-                seq_m[idx_m] = i
-                idx_m -= 1
-                if idx_m == -1: break
+            if len(self.user_valid_m[u]) > 0:
+                seq_m = self.generate_validation_sequence(self.user_train_m[u], self.args.maxlen)
 
-
-            seq_a = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx_a = self.args.maxlen - 1
-            for i in reversed(self.user_train_a[u]):
-                seq_a[idx_a] = i
-                idx_a -= 1
-                if idx_a == -1: break
-
-
-
-            seq_b = np.zeros([self.args.maxlen], dtype=np.int32)
-            idx_b = self.args.maxlen - 1
-            for i in reversed(self.user_train_b[u]):
-                seq_b[idx_b] = i
-                idx_b -= 1
-                if idx_b == -1: break
-
-
-            rated = set(self.user_train_m[u])
-            rated.add(0)
-            item_idx = [self.user_valid[u][0]]
-            for _ in range(100):
-                t = np.random.randint(1, self.n_items + 1)
-                while t in rated: 
+                rated = set(self.user_train_m[u])
+                rated.add(0)
+                item_idx = [self.user_valid_m[u][0]]
+                for _ in range(100):
                     t = np.random.randint(1, self.n_items + 1)
-                item_idx.append(t)
+                    while t in rated: 
+                        t = np.random.randint(1, self.n_items + 1)
+                    item_idx.append(t)
 
-            predictions = -self.model.predict(*[np.array(l) for l in [[u], [seq], item_idx]])
-            predictions = predictions[0]
+                pred_m = -self.model.predict(np.array([seq_m]), item_idx, 'm')
 
-            rank = predictions.argsort().argsort()[0].item()
+                ndgc, ht, rank = self.calc_metrics(pred_m)
+                NDCG_m += ndgc
+                HT_m += ht
+                rank_m += rank
+                valid_users_m += 1
+                val_loss += self.calc_val_loss(pred_m)
+                num_samples_m += 1
+            else:
+                invalid_m += 1
 
-            valid_user += 1
+            if len(self.user_valid_a[u]) > 0:
+                seq_a = self.generate_validation_sequence(self.user_train_a[u], self.args.maxlen)
 
-            # CALCULATE VAL LOSS
-            # Had to unsqueeze to convert pos_logits to same shape as pos_label to calc loss!
-            pos_logits = (-predictions[0]).unsqueeze(0)  # First item is the ground truth
-            neg_logits = -predictions[1:]  # Remaining 100 are negative samples
-            pos_label = torch.tensor([1.0], device=self.args.device)
-            neg_labels = torch.zeros_like(neg_logits, device=self.args.device)
+                rated = set(self.user_train_a[u])
+                rated.add(0)
+                item_idx = [self.user_valid_a[u][0]]
+                for _ in range(100):
+                    t = np.random.randint(1, self.n_items + 1)
+                    while t in rated: 
+                        t = np.random.randint(1, self.n_items + 1)
+                    item_idx.append(t)
 
-            loss = self.bce_loss(pos_logits.to(self.args.device), pos_label)
-            loss += self.bce_loss(neg_logits.to(self.args.device), neg_labels)
-            total_val_loss += loss.item()
-            num_samples += 1
-
-            if rank < 10:
-                NDCG += 1 / np.log2(rank + 2)
-                HT += 1
-            if valid_user % 100 == 0:
-                print('.', end="")
-                sys.stdout.flush()
+                pred_a = -self.model.predict(np.array([seq_a]), item_idx, 'a')
                 
-        # Calculate validation loss
-        if num_samples > 0:
-            val_loss = total_val_loss / num_samples
-            NDCG = NDCG / valid_user
-            HT = HT / valid_user
+                ndgc, ht, rank = self.calc_metrics(pred_a)
+                NDCG_a += ndgc
+                HT_a += ht
+                rank_a += rank
+                valid_users_a += 1
+                val_loss += self.calc_val_loss(pred_a)
+                num_samples_a += 1
+            else:
+                invalid_a += 1
 
-        print(f"num_samples={num_samples}, avg_valid_loss={val_loss}")
+            if len(self.user_valid_b[u]) > 0:
+                seq_b = self.generate_validation_sequence(self.user_train_b[u], self.args.maxlen)
+
+                rated = set(self.user_train_b[u])
+                rated.add(0)
+                item_idx = [self.user_valid_b[u][0]]
+                for _ in range(100):
+                    t = np.random.randint(1, self.n_items + 1)
+                    while t in rated: 
+                        t = np.random.randint(1, self.n_items + 1)
+                    item_idx.append(t)
+
+                pred_b = -self.model.predict(np.array([seq_b]), item_idx, 'b')
+                
+                ndgc, ht, rank = self.calc_metrics(pred_b)
+                NDCG_b += ndgc
+                HT_b += ht
+                rank_b += rank
+                valid_users_b += 1
+                val_loss += self.calc_val_loss(pred_b)
+                num_samples_b += 1
+            else:
+                invalid_b += 1
+
+
+        if valid_users_m > 0:
+            NDCG_m = NDCG_m / valid_users_m
+            HT_m = HT_m / valid_users_m
+            rank_m = rank_m / valid_users_m  # Add rank averaging for domain m
+
+        if valid_users_a > 0:
+            NDCG_a = NDCG_a / valid_users_a
+            HT_a = HT_a / valid_users_a
+            rank_a = rank_a / valid_users_a  # Add rank averaging for domain a
+
+        if valid_users_b > 0:
+            NDCG_b = NDCG_b / valid_users_b
+            HT_b = HT_b / valid_users_b
+            rank_b = rank_b / valid_users_b  # Add rank averaging for domain b
+                
+
         return NDCG, HT, val_loss
 
     def run_test(self, i):
@@ -306,7 +330,7 @@ class Trainer(object):
         return NDCG, HT, rank
     
     def generate_test_sequence(self, user_test, user_train, user_valid, maxlen):
-        if len(user_test) < 1:
+        if len(user_test) < 1: #TODO: Remove this since i added len validation outside 
             return False 
         seq = np.zeros([maxlen], dtype=np.int32)
         idx = maxlen - 1
@@ -318,3 +342,24 @@ class Trainer(object):
             if idx == -1:
                 break
         return seq
+    
+    def generate_validation_sequence(self, user_train, maxlen):
+        seq = np.zeros([maxlen], dtype=np.int32)
+        idx = maxlen - 1
+        for i in reversed(user_train):
+            seq[idx] = i
+            idx -= 1
+            if idx == -1:
+                break
+        return seq
+    
+    def calc_val_loss(self, predictions):
+        pos_logits = (-predictions[0]).unsqueeze(0)  # First item is the ground truth
+        neg_logits = -predictions[1:]  # Remaining 100 are negative samples
+        pos_label = torch.tensor([1.0], device=self.args.device)
+        neg_labels = torch.zeros_like(neg_logits, device=self.args.device)
+
+        loss = self.bce_loss(pos_logits.to(self.args.device), pos_label)
+        loss += self.bce_loss(neg_logits.to(self.args.device), neg_labels)
+        
+        return loss.item()
