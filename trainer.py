@@ -174,16 +174,16 @@ class Trainer(object):
         valid_user= 0
 
         users = range(self.n_users)
-        print("len(self.user_test_m)", len(self.user_test_a))
+        print("len(self.user_test_m)", len(self.user_test_m))
         print("len(self.user_test_a)", len(self.user_test_a))
-        print("len(self.user_test_b)", len(self.user_test_a))
-        # Reconstruct user sequence from train + valid
-        # seq[] = train[u] + valid[u] (then we predict test[u])
+        print("len(self.user_test_b)", len(self.user_test_b))
+
         for u in users:
             if len(self.user_test_m[u]) < 1: 
                 continue
 
-        # Reconstruct test sequence for all 3 domains
+        # Reconstruct user sequence from train + valid for all 3 domains
+        # seq[] = train[u] + valid[u] (then we predict test[u])
         seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
         idx_m = self.args.maxlen - 1
         seq_m[idx_m] = self.user_valid_m[u][0]
@@ -213,9 +213,9 @@ class Trainer(object):
             idx_b -= 1
             if idx_b == -1: break
 
-        rated = set(self.user_train[u])
+        rated = set(self.user_train_m[u])
         rated.add(0)
-        item_idx = [self.user_valid[u][0]]
+        item_idx = [self.user_test_m[u][0]]
 
         for _ in range(100):
             t = np.random.randint(1, self.n_items + 1)

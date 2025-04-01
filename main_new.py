@@ -76,7 +76,9 @@ if __name__ == '__main__':
             print('Evaluating', end='')
             ## Eval test and validation performance
             t_test = trainer.run_test(epoch)
-            t_valid = trainer.run_valid(epoch)
+            print('epoch:%d, time taken: %f(s), test (NDCG@10: %.4f, HR@10: %.4f)'
+                % (epoch, t1, t_test[0], t_test[1]))
+            #t_valid = trainer.run_valid(epoch)
             print('epoch:%d, time taken: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f, validLoss: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
                     % (epoch, t1, t_valid[0], t_valid[1], t_valid[2], t_test[0], t_test[1]))
 

@@ -165,19 +165,25 @@ class CDSR(torch.nn.Module):
                 pos_logits_b, neg_logits_b)
 
     """ Seems like this function is never called anywehre..."""
-    def predict(self, user_ids, log_seqs, item_indices): # for inference
-        log_feats = self.log2feats(log_seqs) # user_ids hasn't been used yet
+    def predict(self, user_ids, seq_m, seq_a, seq_b, item_indices): # for inference
 
-        final_feat = log_feats[:, -1, :] # only use last QKV classifier, a waste
+        log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m))
+        log_feats_a = self.encoder_a(*self.generate_input_embedding(seq_a))
+        log_feats_b = self.encoder_b(*self.generate_input_embedding(seq_b))
 
-        item_embs = self.item_emb(torch.LongTensor(item_indices).to(self.args.device)) # (U, I, C)
+        final_feat_m = log_feats_m[:, -1, :]
+        final_feat_a = log_feats_a[:, -1, :]
+        final_feat_b = log_feats_b[:, -1, :] 
 
-        ## different logits between calc matrix and loss. Need diff functions
-        logits = item_embs.matmul(final_feat.unsqueeze(-1)).squeeze(-1)
+        final_feat = final_feat_m + final_feat_a + final_feat_b  # Sum features from all domains
 
-        # preds = self.pos_sigmoid(logits) # rank same item list for different users
+        # Get item embeddings
+        item_embs = self.item_emb(torch.LongTensor(item_indices).to(self.args.device))  # (batch_size, item_count, dim)
 
-        return logits # preds # (U, I)
+        # Predict scores
+        logits = item_embs.matmul(final_feat.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
+
+        return logits
 
 
 def init_weights(model):

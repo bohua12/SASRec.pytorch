@@ -96,8 +96,9 @@ class SASRec(torch.nn.Module):
         ## IIIC: Stacking Self-Attention Blocks-Dropout - alleviate overfitting in Deep NN (randomly turn off neurons)
         seqs = self.emb_dropout(seqs)
 
-        ## Creates Attention Mask (prevent peek into future) 
+        ## Creates Attention Mask (prevent peek into future)  (!!!)
         tl = seqs.shape[1] # time dim len for enforce causality
+
         attention_mask = ~torch.tril(torch.ones((tl, tl), dtype=torch.bool, device=self.dev))
 
         ## Feed through all the attention blocks! (Created in __init__)
@@ -124,9 +125,10 @@ class SASRec(torch.nn.Module):
     ### self.model(data)  equals to self.model.forward(data). Special situation then use this fn
     def forward(self, user_ids, log_seqs, pos_seqs, neg_seqs): # for training        
         log_feats = self.log2feats(log_seqs) # user_ids hasn't been used yet
-
+        print(pos_seqs)
         pos_embs = self.item_emb(torch.LongTensor(pos_seqs).to(self.dev))
         neg_embs = self.item_emb(torch.LongTensor(neg_seqs).to(self.dev))
+        print(pos_embs)
 
         pos_logits = (log_feats * pos_embs).sum(dim=-1)
         neg_logits = (log_feats * neg_embs).sum(dim=-1)
