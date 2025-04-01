@@ -111,7 +111,7 @@ class Trainer(object):
         users = range(self.n_users)
 
         for u in users:
-            if len(self.user_valid[u]) < 1: 
+            if len(self.user_valid_m[u]) < 1: 
                 continue
             # seq[] = train[u] (then we predict valid[u])
             seq = np.zeros([self.args.maxlen], dtype=np.int32)
@@ -121,7 +121,32 @@ class Trainer(object):
                 idx -= 1
                 if idx == -1: break
 
-            rated = set(self.user_train[u])
+            seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
+            idx_m = self.args.maxlen - 1
+            for i in reversed(self.user_train_m[u]):
+                seq_m[idx_m] = i
+                idx_m -= 1
+                if idx_m == -1: break
+
+
+            seq_a = np.zeros([self.args.maxlen], dtype=np.int32)
+            idx_a = self.args.maxlen - 1
+            for i in reversed(self.user_train_a[u]):
+                seq_a[idx_a] = i
+                idx_a -= 1
+                if idx_a == -1: break
+
+
+
+            seq_b = np.zeros([self.args.maxlen], dtype=np.int32)
+            idx_b = self.args.maxlen - 1
+            for i in reversed(self.user_train_b[u]):
+                seq_b[idx_b] = i
+                idx_b -= 1
+                if idx_b == -1: break
+
+
+            rated = set(self.user_train_m[u])
             rated.add(0)
             item_idx = [self.user_valid[u][0]]
             for _ in range(100):
@@ -182,6 +207,7 @@ class Trainer(object):
             if len(self.user_test_m[u]) < 1: 
                 continue
 
+            ## 1) GENERATE SEQUENCE
             # Reconstruct user sequence from train + valid for all 3 domains
             # seq[] = train[u] + valid[u] (then we predict test[u])
             seq_m = np.zeros([self.args.maxlen], dtype=np.int32)
@@ -213,31 +239,54 @@ class Trainer(object):
                 idx_b -= 1
                 if idx_b == -1: break
 
-            rated = set(self.user_train_m[u])
-            rated.add(0)
-            item_idx = [self.user_test_m[u][0]]
-
-            for _ in range(100):
+            ## 2) RATE ITEM
+            # Rated and item_idx for m
+            rated_m = set(self.user_train_m[u])
+            rated_m.add(0)
+            item_idx_m = [self.user_test_m[u][0]]
+            for _ in range(100): # Select 100 random item not in this domain
                 t = np.random.randint(1, self.n_items_m + 1)
-                while t in rated: 
+                while t in rated_m: 
                     t = np.random.randint(1, self.n_items_m + 1)
-                item_idx.append(t)
+                item_idx_m.append(t)
 
-            predictions = -self.model.predict(u, np.array([seq_m]), np.array([seq_a]), np.array([seq_b]), item_idx)
-            predictions = predictions[0]
+            # Rated and item_idx for a
+            rated_a = set(self.user_train_a[u])
+            rated_a.add(0)
+            item_idx_a = [self.user_test_a[u][0]]
+            for _ in range(100):
+                t = np.random.randint(1, self.n_items_a + 1)
+                while t in rated_a: 
+                    t = np.random.randint(1, self.n_items_a + 1)
+                item_idx_a.append(t)
 
-            rank = predictions.argsort().argsort()[0].item()
-            print("RANK", rank)
+            # Rated and item_idx for b
+            rated_b = set(self.user_train_b[u])
+            rated_b.add(0)
+            item_idx_b = [self.user_test_b[u][0]]
+            for _ in range(100):
+                t = np.random.randint(1, self.n_items_b + 1)
+                while t in rated_b: 
+                    t = np.random.randint(1, self.n_items_b + 1)
+                item_idx_b.append(t)
 
+            ## GENERATE RANK
+            pred_m, pred_a, pred_b = -self.model.predict(u, np.array([seq_m]), np.array([seq_a]), np.array([seq_b]), item_idx_m, item_idx_a, item_idx_b)
+            NDCG_m, HT_m, rank_m = self.calc_metrics(pred_m)
+            NDCG_a, HT_a, rank_a = self.calc_metrics(pred_a)
+            NDCG_b, HT_b, rank_b = self.calc_metrics(pred_b)
+
+            print(f"NDCG_m: {NDCG_m:.4f}, HT_m: {HT_m:.4f}")
+            print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}")
+            print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}")
+            
+            print(f"Rank M: {rank_m}, Rank A: {rank_a}, Rank B: {rank_b}")
             valid_user += 1
 
-            if rank < 10:
-                NDCG += 1 / np.log2(rank + 2)
-                HT += 1
-            if valid_user % 100 == 0:
-                print('.', end="")
-                sys.stdout.flush()
-            print(f"NDCG: {NDCG}, HT: {HT}")
+
+            # if valid_user % 100 == 0:
+            #     print('.', end="")
+            #     sys.stdout.flush()
 
                 
         # Calculate validation loss
@@ -247,3 +296,10 @@ class Trainer(object):
 
         return NDCG, HT
 
+    def calc_metrics(prep, target_rank = 10):
+        pred = pred[0]  # remove batch dimension
+        rank = pred.argsort().argsort()[0].item()
+        if rank < 10:
+            NDCG += 1 / np.log2(rank + 2)
+            HT += 1
+        return NDCG, HT, rank

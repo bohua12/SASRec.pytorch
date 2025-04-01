@@ -165,7 +165,7 @@ class CDSR(torch.nn.Module):
                 pos_logits_b, neg_logits_b)
 
     """ Seems like this function is never called anywehre..."""
-    def predict(self, user_ids, seq_m, seq_a, seq_b, item_indices): # for inference
+    def predict(self, user_ids, seq_m, seq_a, seq_b, item_idx_m, item_idx_a, item_idx_b): # for inference
 
         log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m))
         log_feats_a = self.encoder_a(*self.generate_input_embedding(seq_a))
@@ -175,15 +175,17 @@ class CDSR(torch.nn.Module):
         final_feat_a = log_feats_a[:, -1, :]
         final_feat_b = log_feats_b[:, -1, :] 
 
-        final_feat = final_feat_m + final_feat_a + final_feat_b  # Sum features from all domains
-
         # Get item embeddings
-        item_embs = self.item_emb(torch.LongTensor(item_indices).to(self.args.device))  # (batch_size, item_count, dim)
+        item_embs_m = self.item_emb(torch.LongTensor(item_idx_m).to(self.args.device))  # (batch_size, item_count, dim)
+        item_embs_a = self.item_emb(torch.LongTensor(item_idx_a).to(self.args.device))  # (batch_size, item_count, dim)
+        item_embs_b = self.item_emb(torch.LongTensor(item_idx_b).to(self.args.device))  # (batch_size, item_count, dim)
 
         # Predict scores
-        logits = item_embs.matmul(final_feat.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
+        logits_m = item_embs_m.matmul(final_feat_m.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
+        logits_a = item_embs_a.matmul(final_feat_a.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
+        logits_b = item_embs_b.matmul(final_feat_b.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
 
-        return logits
+        return logits_m,logits_a,logits_b
 
 
 def init_weights(model):
