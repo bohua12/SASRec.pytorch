@@ -27,7 +27,7 @@ class Trainer(object):
         # LOAD MODEL
         print("Loading model...")
         #self.model = SASRec(self.n_users, self.n_items, args).to(args.device)
-        self.model = CDSR(self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, self.args)
+        self.model = CDSR(self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, self.args).to(args.device)
         # adam moved from later line to here!
         self.adam_optimizer = torch.optim.AdamW(self.model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
         self.bce_loss = torch.nn.BCEWithLogitsLoss() # torch.nn.BCELoss()
@@ -218,9 +218,9 @@ class Trainer(object):
         item_idx = [self.user_test_m[u][0]]
 
         for _ in range(100):
-            t = np.random.randint(1, self.n_items + 1)
+            t = np.random.randint(1, self.n_items_m + 1)
             while t in rated: 
-                t = np.random.randint(1, self.n_items + 1)
+                t = np.random.randint(1, self.n_items_m + 1)
             item_idx.append(t)
 
         predictions = -self.model.predict(u, np.array([seq_m]), np.array([seq_a]), np.array([seq_b]), item_idx)
