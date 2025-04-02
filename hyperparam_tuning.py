@@ -13,8 +13,8 @@ weight_decays = [1e-4, 1e-3, 1e-2]
 
 # Initialise Cmd Line args
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', required=True)
-parser.add_argument('--train_dir', required=True)
+#parser.add_argument('--dataset', required=True)
+#parser.add_argument('--train_dir', required=True)
 parser.add_argument('--device', default='cuda', type=str)
 parser.add_argument('--maxlen', default=200, type=int)
 parser.add_argument('--batch_size', default=128, type=int)
@@ -25,6 +25,7 @@ args = parser.parse_args()
 print("Hyperparameter tuning")
 # Load dataset 
 print("Loading data...")
+args.verbose=0
 
 # Load and Split data into Train/Test/Valid
 [
