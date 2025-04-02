@@ -93,7 +93,8 @@ if __name__ == '__main__':
             else:
                 epochs_since_improvement += args.verification_frequency
                 print(f"{epochs_since_improvement} epochs since the last improvement in Validation NDCG/HR")
-
+            # NEW SCHEDULER HERE!
+            trainer.scheduler.step(t_valid[0])  # if you're monitoring NDCG
             ## Log results in log.txt
             f.write(str(epoch) + ' ' + str(t_valid) + ' ' + str(t_test) + '\n')
             f.flush()

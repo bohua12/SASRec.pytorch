@@ -29,6 +29,14 @@ class Trainer(object):
         self.model = CDSR(self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, self.args).to(args.device)
         # adam moved from later line to here!
         self.adam_optimizer = torch.optim.AdamW(self.model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            self.adam_optimizer,
+            mode='max',
+            factor=0.5,
+            patience=5,
+            verbose=True
+        )
+
         self.bce_loss = torch.nn.BCEWithLogitsLoss() # torch.nn.BCELoss()
 
         for name, param in self.model.named_parameters():
@@ -52,6 +60,7 @@ class Trainer(object):
         #     pos_logits, neg_logits = self.model(u, seq, pos, neg)
 
         for step, (uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b) in enumerate(self.dl):
+            current_lr = self.adam_optimizer.param_groups[0]["lr"]
             # TRAIN BATCH
             (pos_logits_m, neg_logits_m,
             pos_logits_a, neg_logits_a,
@@ -79,7 +88,7 @@ class Trainer(object):
             loss.backward()
             self.adam_optimizer.step()
             epoch_loss += loss.item()
-        print(f"Epoch {i} trg loss: {epoch_loss / len(self.dl):.4f}")
+        print(f"Epoch {i} trg loss: {epoch_loss / len(self.dl):.4f} | LR: {current_lr:.6f}")
         return epoch_loss
     
     """
@@ -237,6 +246,7 @@ class Trainer(object):
                 rated_m = set(self.user_train_m[u])
                 rated_m.add(0)
                 item_idx_m = [self.user_test_m[u][0]]
+                # QT: use his trick to avoid loop; this is v slow
                 for _ in range(100): # Select 100 random item not in this domain
                     t = np.random.randint(1, self.n_items_m + 1)
                     while t in rated_m: 
