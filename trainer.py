@@ -50,6 +50,7 @@ class Trainer(object):
         print("Model loaded successfully!\n")
 
 
+ 
     def run_epoch(self, i):
         self.model.train()
         self.adam_optimizer.zero_grad()

@@ -92,32 +92,25 @@ class CDSR(torch.nn.Module):
         self.user_num = user_num
         self.item_num = item_num_m
 
+        # === SHARED EMBEDDINGS ===
         ## IIIA: Embedding Layer - Create item embedding (represent item)
         self.item_emb = torch.nn.Embedding(self.item_num+1, args.hidden_units, padding_idx=0)
-
         ## IIIA: Embedding Layer-Positional Embedding - Create Positional Embedding (Because of nature of self-attention module)
         self.pos_emb = torch.nn.Embedding(args.maxlen+1, args.hidden_units, padding_idx=0)
-
         ## IIIC: Stacking Self-Attention Blocks-Dropout - alleviate overfitting in Deep NN (randomly turn off neurons)
         self.emb_dropout = torch.nn.Dropout(p=args.dropout_rate) # Set to 0.2 on default
 
+        # === DOMAIN SPECIFIC ENCODERS ===
         self.encoder_m = Encoder(args)
         self.encoder_a = Encoder(args)
         self.encoder_b = Encoder(args)
 
-        if args.verbose:
-            print("Positional embedding shape:", self.pos_emb.weight.shape)  # (batch_size, maxlen, hidden_units)
-            print("Item embedding shape:", self.item_emb.weight.shape)  # (batch_size, maxlen, hidden_units)
-            print("")
-            print(f"# of attention blocks: {len(self.attention_layers)}")
-            print(f"Structure of all attn layer: {self.attention_layers}")
-            print(f"Structure of first attn layer: {self.attention_layers[0]}")
-            print("")
-            print(f"Structure of all FFN layer: {self.forward_layers}")
-            print(f"Structure of first FFN layer: {self.forward_layers[0]}")
+        # === DOMAIN SPECIFIC LINEAR LAYERS === 
+        self.lin_m = torch.nn.Linear(args.hidden_units, item_num_m + 1)
+        self.lin_a = torch.nn.Linear(args.hidden_units, item_num_a + 1)
+        self.lin_b = torch.nn.Linear(args.hidden_units, item_num_b + 1)
 
-
-    """ Before encoding """
+    """ Before encoding, trains the embedding """
     def generate_input_embedding(self, log_seqs):
         #print(log_seqs)
         seqs = self.item_emb(torch.LongTensor(log_seqs).to(self.args.device))
@@ -133,9 +126,9 @@ class CDSR(torch.nn.Module):
 
 
     ### self.model(data)  equals to self.model.forward(data). Special situation then use this fn
-    def forward(self, uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b):
+    def forward_old(self, uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b):
 
-        log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m))
+        log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m)) # Trains the embedding
         log_feats_a = self.encoder_a(*self.generate_input_embedding(seq_a))
         log_feats_b = self.encoder_b(*self.generate_input_embedding(seq_b))
 
@@ -163,47 +156,58 @@ class CDSR(torch.nn.Module):
         return (pos_logits_m, neg_logits_m,
                 pos_logits_a, neg_logits_a,
                 pos_logits_b, neg_logits_b)
+    
+    ### self.model(data)  equals to self.model.forward(data). Special situation then use this fn
+    def forward(self, uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b):
 
-    """ Not in use anymore, decided to switch to single predict"""
-    def predict_all_3(self, user_ids, seq_m, seq_a, seq_b, item_idx_m, item_idx_a, item_idx_b): # for inference
-
-        log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m))
+        log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m)) # Trains the embedding
         log_feats_a = self.encoder_a(*self.generate_input_embedding(seq_a))
         log_feats_b = self.encoder_b(*self.generate_input_embedding(seq_b))
 
-        final_feat_m = log_feats_m[:, -1, :]
-        final_feat_a = log_feats_a[:, -1, :]
-        final_feat_b = log_feats_b[:, -1, :] 
+        # Compute domain-specific scores in linear layer
+        score_m = self.lin_m(log_feats_m)
+        score_a = self.lin_a(log_feats_a)
+        score_b = self.lin_b(log_feats_b)
 
-        # Get item embeddings
-        item_embs_m = self.item_emb(torch.LongTensor(item_idx_m).to(self.args.device))  # (batch_size, item_count, dim)
-        item_embs_a = self.item_emb(torch.LongTensor(item_idx_a).to(self.args.device))  # (batch_size, item_count, dim)
-        item_embs_b = self.item_emb(torch.LongTensor(item_idx_b).to(self.args.device))  # (batch_size, item_count, dim)
+        # Get positive/negative logit using gather
+        pos_logits_m = torch.gather(score_m, dim=-1, index=pos_m.unsqueeze(-1)).squeeze(-1)
+        neg_logits_m = torch.gather(score_m, dim=-1, index=neg_m.unsqueeze(-1)).squeeze(-1)
 
-        # Predict scores
-        logits_m = item_embs_m.matmul(final_feat_m.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
-        logits_a = item_embs_a.matmul(final_feat_a.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
-        logits_b = item_embs_b.matmul(final_feat_b.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
+        pos_logits_a = torch.gather(score_a, dim=-1, index=pos_a.unsqueeze(-1)).squeeze(-1)
+        neg_logits_a = torch.gather(score_a, dim=-1, index=neg_a.unsqueeze(-1)).squeeze(-1)
 
-        return logits_m,logits_a,logits_b
-    
+        pos_logits_b = torch.gather(score_b, dim=-1, index=pos_b.unsqueeze(-1)).squeeze(-1)
+        neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.unsqueeze(-1)).squeeze(-1)
+
+
+        return (pos_logits_m, neg_logits_m,
+                pos_logits_a, neg_logits_a,
+                pos_logits_b, neg_logits_b)
+
     def predict(self, seq, item_idx, domain):
+        seqs, poss = self.generate_input_embedding(seq)
         if domain == "m":
-            log_feats = self.encoder_m(*self.generate_input_embedding(seq))
+            log_feats = self.encoder_m(seqs, poss)[:, -1] # [:,-1] because we ONLY want to capture the final sequence
+            scores = self.lin_m(log_feats)
         elif domain == "a":
-            log_feats = self.encoder_a(*self.generate_input_embedding(seq))
+            log_feats = self.encoder_a(seqs, poss)
+            scores = self.lin_a(log_feats) # (batch_size, num_items)
         else:
-            log_feats = self.encoder_b(*self.generate_input_embedding(seq))
+            log_feats = self.encoder_b(seqs, poss)
+            scores = self.lin_b(log_feats)
 
-        final_feat = log_feats[:, -1, :]
 
-        # Get item embeddings
-        item_embs = self.item_emb(torch.LongTensor(item_idx).to(self.args.device))  # (batch_size, item_count, dim)
+        # final_feat = log_feats[:, -1, :] not in use as changed to linear score
 
-        # Predict scores
-        logits = item_embs.matmul(final_feat.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
+        # Get item embeddings and dot produuct
+        # item_embs = self.item_emb(torch.LongTensor(item_idx).to(self.args.device))  # (batch_size, item_count, dim)
+        # logits = item_embs.matmul(log_feats.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
 
-        return logits
+        item_idx = torch.LongTensor(item_idx).to(self.args.device)
+        return scores[:, item_idx]  # extract only scores for candidate items
+
+
+        # return logits
 
 
 def init_weights(model):
