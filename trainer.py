@@ -337,9 +337,9 @@ class Trainer(object):
         return NDCG, HT, rank
     
     def generate_test_sequence(self, user_test, user_train, user_valid, maxlen):
-        if len(user_test) < 1: #TODO: Remove this since i added len validation outside 
-            return False 
-        seq = np.zeros([maxlen], dtype=np.int32)
+        if len(user_test) < 1:
+            return False
+        seq = torch.zeros(maxlen, dtype=torch.long)
         idx = maxlen - 1
         seq[idx] = user_valid[0]
         idx -= 1
@@ -351,7 +351,7 @@ class Trainer(object):
         return seq
     
     def generate_validation_sequence(self, user_train, maxlen):
-        seq = np.zeros([maxlen], dtype=np.int32)
+        seq = torch.zeros(maxlen, dtype=torch.long)
         idx = maxlen - 1
         for i in reversed(user_train):
             seq[idx] = i
