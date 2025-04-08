@@ -31,30 +31,32 @@ def data_partition(fname, fraw, args):
                 User[u].append(int(ui.split('|')[0]))    
         for user in User:
             nfeedback = len(User[user])
+            user_tensor = torch.LongTensor(User[user])
             if nfeedback < 3:
-                user_train_m[user] = User[user]
-                user_valid_m[user] = []
-                user_test_m[user] = []
+                user_train_m[user] = user_tensor
+                user_valid_m[user] = torch.LongTensor([])
+                user_test_m[user] = torch.LongTensor([])
 
-                user_train_a[user] = [i for i in User[user] if i < n_items_a]
-                user_train_b[user] = [i for i in User[user] if i >= n_items_a]
-                user_valid_a[user] = []
-                user_valid_b[user] = []
-                user_test_a[user] = []
-                user_test_b[user] = []
+                user_train_a[user] = user_tensor[user_tensor < n_items_a]
+                user_train_b[user] = user_tensor[user_tensor >= n_items_a]
+                user_valid_a[user] = torch.LongTensor([])
+                user_valid_b[user] = torch.LongTensor([])
+                user_test_a[user] = torch.LongTensor([])
+                user_test_b[user] = torch.LongTensor([])
             else:
-                user_train_m[user] = User[user][:-2]
-                user_valid_m[user] = [User[user][-2]]
-                user_test_m[user] = [User[user][-1]]
+                user_train_m[user] = user_tensor[:-2]
+                user_valid_m[user] = user_tensor[-2:-1]
+                user_test_m[user] = user_tensor[-1:]
 
-                user_train_a[user] = [i for i in User[user][:-2] if i < n_items_a]
-                user_train_b[user] = [i for i in User[user][:-2] if i >= n_items_a]
+                user_train_a[user] = user_tensor[:-2][user_tensor[:-2] < n_items_a]
+                user_train_b[user] = user_tensor[:-2][user_tensor[:-2] >= n_items_a]
 
-                user_valid_a[user] = [User[user][-2]] if User[user][-2] < n_items_a else []
-                user_valid_b[user] = [User[user][-2]] if User[user][-2] >= n_items_a else []
+                user_valid_a[user] = user_tensor[-2:-1] if user_tensor[-2] < n_items_a else torch.LongTensor([])
+                user_valid_b[user] = user_tensor[-2:-1] if user_tensor[-2] >= n_items_a else torch.LongTensor([])
 
-                user_test_a[user] = [User[user][-1]] if User[user][-1] < n_items_a else []
-                user_test_b[user] = [User[user][-1]] if User[user][-1] >= n_items_a else []
+                user_test_a[user] = user_tensor[-1:] if user_tensor[-1] < n_items_a else torch.LongTensor([])
+                user_test_b[user] = user_tensor[-1:] if user_tensor[-1] >= n_items_a else torch.LongTensor([])
+
 
     print(f"user_train_a: {len(user_train_a)}")
     print(f"user_valid_a: {len(user_valid_a)}")
