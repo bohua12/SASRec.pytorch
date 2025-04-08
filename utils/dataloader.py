@@ -120,7 +120,7 @@ def get_dataloader_old(user_train, usernum, itemnum, args):
 
 def get_dataloader(train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args):
     ds = CDSRDataset(train_m, train_a, train_b, usernum, itemnum_m, itemnum_a, itemnum_b, args)
-    return DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0, collate_fn=collate_identity)
+    return DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0,)
 
 """ Standard implementation of abstract class Dataset, to be instantiated and used with DataLoader class"""
 class SASRecDataset(Dataset):

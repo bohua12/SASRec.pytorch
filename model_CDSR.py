@@ -113,7 +113,7 @@ class CDSR(torch.nn.Module):
     """ Before encoding, trains the embedding """
     def generate_input_embedding(self, log_seqs):
         #print(log_seqs)
-        seqs = self.item_emb(torch.LongTensor(log_seqs).to(self.args.device))
+        seqs = self.item_emb(log_seqs)
         seqs *= self.item_emb.embedding_dim ** 0.5  # Sqrt to prevent Gradient Explosion
 
         poss = np.tile(np.arange(1, log_seqs.shape[1] + 1), [log_seqs.shape[0], 1])
