@@ -196,10 +196,10 @@ class CDSRDataset(Dataset):
         tuple: (seq_arr, pos_arr, neg_arr) 
     """
     def build_sequence(self, seq, itemnum):
-        ts = set(seq) 
-        seq_arr = np.zeros([self.maxlen], dtype=np.int32)
-        pos_arr = np.zeros([self.maxlen], dtype=np.int32)
-        neg_arr = np.zeros([self.maxlen], dtype=np.int32)
+        ts = set(seq)
+        seq_arr = torch.zeros(self.maxlen, dtype=torch.long)
+        pos_arr = torch.zeros(self.maxlen, dtype=torch.long)
+        neg_arr = torch.zeros(self.maxlen, dtype=torch.long)
         nxt = seq[-1]
         idx = self.maxlen - 1
         for i in reversed(seq[:-1]):
