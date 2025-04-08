@@ -82,7 +82,7 @@ class Trainer(object):
             ]:
                 pos_labels = torch.ones(pos_logits.shape, device=self.args.device)
                 neg_labels = torch.zeros(neg_logits.shape, device=self.args.device)
-                indices = np.where(np.array(pos) != 0)  # Only non-padding positions
+                indices = (pos != 0)
                 loss += self.bce_loss(pos_logits[indices], pos_labels[indices])
                 loss += self.bce_loss(neg_logits[indices], neg_labels[indices])
 
