@@ -150,8 +150,9 @@ class CDSR(torch.nn.Module):
         # neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.long().unsqueeze(-1)).squeeze(-1)
 
 
-        pos_logits_b = 2
-        neg_logits_b = 1
+
+        pos_logits_b = torch.gather(score_a, dim=-1, index=pos_a.long().unsqueeze(-1)).squeeze(-1)
+        neg_logits_b = torch.gather(score_a, dim=-1, index=neg_a.long().unsqueeze(-1)).squeeze(-1)
 
         return (pos_logits_m, neg_logits_m,
                 pos_logits_a, neg_logits_a,
