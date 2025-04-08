@@ -3,6 +3,7 @@ from utils.dataloader import data_partition, data_partition, get_dataloader # ST
 from model_CDSR import CDSR, init_weights
 import torch
 import os
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 class Trainer(object):
     def __init__(self, args) -> None:
