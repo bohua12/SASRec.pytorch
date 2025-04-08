@@ -123,7 +123,9 @@ class CDSR(torch.nn.Module):
         poss = poss.to(log_seqs.device)
         poss *= (log_seqs != 0)
 
-        seqs += self.pos_emb(torch.LongTensor(poss).to(self.args.device))
+        #seqs += self.pos_emb(torch.LongTensor(poss).to(self.args.device))
+        poss_tensor = torch.from_numpy(poss).long().to(self.args.device)
+        seqs += self.pos_emb(poss_tensor)
         seqs = self.emb_dropout(seqs)
 
         return seqs, poss
