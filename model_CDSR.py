@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 
-
 """ Called by __init__ in CDSR for nLayer times"""
 class PointWiseFeedForward(torch.nn.Module):
     def __init__(self, hidden_units, dropout_rate):
@@ -139,10 +138,6 @@ class CDSR(torch.nn.Module):
         score_m = self.lin_m(log_feats_m)
         score_a = self.lin_a(log_feats_a)
         score_b = self.lin_b(log_feats_b)
-        print("pos_m shape:", pos_m.shape)
-        print("score_m shape:", score_m.shape)
-        print("max pos_m:", pos_m.max().item())
-        print("score_m dim:", score_m.shape[-1])
 
         # Get positive/negative logit using gather
         pos_logits_m = torch.gather(score_m, dim=-1, index=pos_m.long().unsqueeze(-1)).squeeze(-1)
@@ -151,10 +146,12 @@ class CDSR(torch.nn.Module):
         pos_logits_a = torch.gather(score_a, dim=-1, index=pos_a.long().unsqueeze(-1)).squeeze(-1)
         neg_logits_a = torch.gather(score_a, dim=-1, index=neg_a.long().unsqueeze(-1)).squeeze(-1)
 
-        pos_logits_b = torch.gather(score_b, dim=-1, index=pos_b.long().unsqueeze(-1)).squeeze(-1)
-        neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.long().unsqueeze(-1)).squeeze(-1)
+        # pos_logits_b = torch.gather(score_b, dim=-1, index=pos_b.long().unsqueeze(-1)).squeeze(-1)
+        # neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.long().unsqueeze(-1)).squeeze(-1)
 
 
+        pos_logits_b = 2
+        neg_logits_b = 1
 
         return (pos_logits_m, neg_logits_m,
                 pos_logits_a, neg_logits_a,
