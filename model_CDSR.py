@@ -116,7 +116,11 @@ class CDSR(torch.nn.Module):
         seqs = self.item_emb(log_seqs.to(self.args.device))
         seqs *= self.item_emb.embedding_dim ** 0.5  # Sqrt to prevent Gradient Explosion
 
-        poss = np.tile(np.arange(1, log_seqs.shape[1] + 1), [log_seqs.shape[0], 1])
+        # poss = np.tile(np.arange(1, log_seqs.shape[1] + 1), [log_seqs.shape[0], 1])
+        # poss *= (log_seqs != 0)
+
+        poss = torch.arange(1, log_seqs.shape[1] + 1).repeat(log_seqs.shape[0], 1)
+        poss = poss.to(log_seqs.device)
         poss *= (log_seqs != 0)
 
         seqs += self.pos_emb(torch.LongTensor(poss).to(self.args.device))
