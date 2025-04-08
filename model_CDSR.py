@@ -141,14 +141,15 @@ class CDSR(torch.nn.Module):
         score_b = self.lin_b(log_feats_b)
 
         # Get positive/negative logit using gather
-        pos_logits_m = torch.gather(score_m, dim=-1, index=pos_m.unsqueeze(-1)).squeeze(-1)
-        neg_logits_m = torch.gather(score_m, dim=-1, index=neg_m.unsqueeze(-1)).squeeze(-1)
+        pos_logits_m = torch.gather(score_m, dim=-1, index=pos_m.long().unsqueeze(-1)).squeeze(-1)
+        neg_logits_m = torch.gather(score_m, dim=-1, index=neg_m.long().unsqueeze(-1)).squeeze(-1)
 
-        pos_logits_a = torch.gather(score_a, dim=-1, index=pos_a.unsqueeze(-1)).squeeze(-1)
-        neg_logits_a = torch.gather(score_a, dim=-1, index=neg_a.unsqueeze(-1)).squeeze(-1)
+        pos_logits_a = torch.gather(score_a, dim=-1, index=pos_a.long().unsqueeze(-1)).squeeze(-1)
+        neg_logits_a = torch.gather(score_a, dim=-1, index=neg_a.long().unsqueeze(-1)).squeeze(-1)
 
-        pos_logits_b = torch.gather(score_b, dim=-1, index=pos_b.unsqueeze(-1)).squeeze(-1)
-        neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.unsqueeze(-1)).squeeze(-1)
+        pos_logits_b = torch.gather(score_b, dim=-1, index=pos_b.long().unsqueeze(-1)).squeeze(-1)
+        neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.long().unsqueeze(-1)).squeeze(-1)
+
 
 
         return (pos_logits_m, neg_logits_m,
