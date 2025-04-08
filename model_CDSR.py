@@ -127,39 +127,6 @@ class CDSR(torch.nn.Module):
         seqs = self.emb_dropout(seqs)
 
         return seqs, poss
-
-
-    ### self.model(data)  equals to self.model.forward(data). Special situation then use this fn
-    def forward_old(self, uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b):
-
-        log_feats_m = self.encoder_m(*self.generate_input_embedding(seq_m)) # Trains the embedding
-        log_feats_a = self.encoder_a(*self.generate_input_embedding(seq_a))
-        log_feats_b = self.encoder_b(*self.generate_input_embedding(seq_b))
-
-        ## item_emb obj shd be reused 
-        pos_embs_m = self.item_emb(torch.LongTensor(pos_m).to(self.args.device))
-        neg_embs_m = self.item_emb(torch.LongTensor(neg_m).to(self.args.device))
-        
-        pos_embs_a = self.item_emb(torch.LongTensor(pos_a).to(self.args.device))
-        neg_embs_a = self.item_emb(torch.LongTensor(neg_a).to(self.args.device))
-
-        pos_embs_b = self.item_emb(torch.LongTensor(pos_b).to(self.args.device))
-        neg_embs_b = self.item_emb(torch.LongTensor(neg_b).to(self.args.device))
-
-        # Compute logits
-        pos_logits_m = (log_feats_m * pos_embs_m).sum(dim=-1)
-        neg_logits_m = (log_feats_m * neg_embs_m).sum(dim=-1)
-
-        pos_logits_a = (log_feats_a * pos_embs_a).sum(dim=-1)
-        neg_logits_a = (log_feats_a * neg_embs_a).sum(dim=-1)
-
-        pos_logits_b = (log_feats_b * pos_embs_b).sum(dim=-1)
-        neg_logits_b = (log_feats_b * neg_embs_b).sum(dim=-1)
-
-
-        return (pos_logits_m, neg_logits_m,
-                pos_logits_a, neg_logits_a,
-                pos_logits_b, neg_logits_b)
     
     ### self.model(data)  equals to self.model.forward(data). Special situation then use this fn
     def forward(self, uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b):

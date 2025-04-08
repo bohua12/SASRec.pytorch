@@ -60,8 +60,9 @@ class Trainer(object):
         #     #print(seq)
         #     pos_logits, neg_logits = self.model(u, seq, pos, neg)
 
-        for step, (uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b) in enumerate(self.dl):
+        for step, batch in enumerate(self.dl):
             current_lr = self.adam_optimizer.param_groups[0]["lr"]
+            uid, seq_m, pos_m, neg_m, seq_a, pos_a, neg_a, seq_b, pos_b, neg_b = map(lambda x: x.to(self.args.device), batch)
             # TRAIN BATCH
             (pos_logits_m, neg_logits_m,
             pos_logits_a, neg_logits_a,
