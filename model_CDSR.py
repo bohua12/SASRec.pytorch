@@ -139,6 +139,10 @@ class CDSR(torch.nn.Module):
         score_m = self.lin_m(log_feats_m)
         score_a = self.lin_a(log_feats_a)
         score_b = self.lin_b(log_feats_b)
+        print("pos_m shape:", pos_m.shape)
+        print("score_m shape:", score_m.shape)
+        print("max pos_m:", pos_m.max().item())
+        print("score_m dim:", score_m.shape[-1])
 
         # Get positive/negative logit using gather
         pos_logits_m = torch.gather(score_m, dim=-1, index=pos_m.long().unsqueeze(-1)).squeeze(-1)
