@@ -298,7 +298,8 @@ class Trainer(object):
                     while t in rated_b: 
                         t = np.random.randint(1, self.n_items_b + 1)
                     item_idx_b.append(t)
-                pred_b = -self.model.predict(seq_b.unsqueeze(0), item_idx_b, 'b')
+                #pred_b = -self.model.predict(seq_b.unsqueeze(0), item_idx_b, 'b')
+                pred_b = -self.model.predict(seq_a.unsqueeze(0), item_idx_a, 'a')
                 delta_NDCG_b, delta_HT_b, delta_rank_b = self.calc_metrics(pred_b)
                 NDCG_b += delta_NDCG_b
                 HT_b += delta_HT_b
