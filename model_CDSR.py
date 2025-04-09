@@ -139,8 +139,7 @@ class CDSR(torch.nn.Module):
         score_m = self.lin_m(log_feats_m)
         score_a = self.lin_a(log_feats_a)
         score_b = self.lin_b(log_feats_b)
-        #torch.set_printoptions(threshold=torch.inf)
-        #print(neg_b)
+
         pos_b = torch.where(pos_b > 0, pos_b - self.item_num_a, torch.zeros_like(pos_b))
         neg_b = torch.where(neg_b > 0, neg_b - self.item_num_a, torch.zeros_like(neg_b))
 
@@ -157,6 +156,7 @@ class CDSR(torch.nn.Module):
                 pos_logits_b, neg_logits_b)
 
     def predict(self, seq, item_idx, domain):
+        item_idx = torch.LongTensor(item_idx).to(self.args.device)
         seqs, poss = self.generate_input_embedding(seq)
         if domain == "m":
             log_feats = self.encoder_m(seqs, poss)[:, -1] # [:,-1] because we ONLY want to capture the final sequence
@@ -167,22 +167,9 @@ class CDSR(torch.nn.Module):
         else:
             log_feats = self.encoder_b(seqs, poss)
             scores = self.lin_b(log_feats)[:, -1]
+            #item_idx = [i - self.item_num_a for i in item_idx if i > 0]  # skip padding
 
-
-        # final_feat = log_feats[:, -1, :] not in use as changed to linear score
-
-        # Get item embeddings and dot produuct
-        # item_embs = self.item_emb(torch.LongTensor(item_idx).to(self.args.device))  # (batch_size, item_count, dim)
-        # logits = item_embs.matmul(log_feats.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
-
-        item_idx = torch.LongTensor(item_idx).to(self.args.device)
-        #print(scores)
-        #print("ITEM INDEX IS HERE", item_idx)
         return scores[:, item_idx]  # extract only scores for candidate items
-
-
-        # return logits
-
 
 def init_weights(model):
     """

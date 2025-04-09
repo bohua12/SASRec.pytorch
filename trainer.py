@@ -128,23 +128,14 @@ class Trainer(object):
             # seq[] = train[u] (then we predict valid[u])
             if len(self.user_valid_m[u]) > 0:
                 seq_m = self.generate_validation_sequence(self.user_train_m[u], self.args.maxlen).to(self.args.device)
-                
-
-                rated = set(self.user_train_m[u])
-                rated.add(0)
-                item_idx = [self.user_valid_m[u][0]]
-                for _ in range(100):
-                    t = np.random.randint(1, self.n_items_m + 1)
-                    while t in rated: 
-                        t = np.random.randint(1, self.n_items_m + 1)
-                    item_idx.append(t)
+                possible_negs = np.setdiff1d(np.arange(1, self.n_items_m + 1), set(self.user_train_m[u]))
+                item_idx = [self.user_valid_m[u][0]] + np.random.choice(possible_negs, size=100, replace=False).tolist()
 
                 pred_m = -self.model.predict(seq_m.unsqueeze(0), item_idx, 'm')
-
-                ndgc, ht, rank = self.calc_metrics(pred_m)
-                NDCG_m += ndgc
-                HT_m += ht
-                rank_m += rank
+                metrics = self.calc_metrics(pred_m)
+                NDCG_m += metrics[0]
+                HT_m += metrics[1]
+                rank_m += metrics[2]
                 valid_users_m += 1
                 val_loss_m += self.calc_val_loss(pred_m)
                 num_samples_m += 1
@@ -153,22 +144,14 @@ class Trainer(object):
 
             if len(self.user_valid_a[u]) > 0:
                 seq_a = self.generate_validation_sequence(self.user_train_a[u], self.args.maxlen).to(self.args.device)
-
-                rated = set(self.user_train_a[u])
-                rated.add(0)
-                item_idx = [self.user_valid_a[u][0]]
-                for _ in range(100):
-                    t = np.random.randint(1, self.n_items_a + 1)
-                    while t in rated: 
-                        t = np.random.randint(1, self.n_items_a + 1)
-                    item_idx.append(t)
+                possible_negs = np.setdiff1d(np.arange(1, self.n_items_a + 1), set(self.user_train_a[u]))
+                item_idx = [self.user_valid_a[u][0]] + np.random.choice(possible_negs, size=100, replace=False).tolist()
 
                 pred_a = -self.model.predict(seq_a.unsqueeze(0), item_idx, 'a')
-                
-                ndgc, ht, rank = self.calc_metrics(pred_a)
-                NDCG_a += ndgc
-                HT_a += ht
-                rank_a += rank
+                metrics = self.calc_metrics(pred_a)
+                NDCG_a += metrics[0]
+                HT_a += metrics[1]
+                rank_a += metrics[2]
                 valid_users_a += 1
                 val_loss_a += self.calc_val_loss(pred_a)
                 num_samples_a += 1
@@ -177,22 +160,14 @@ class Trainer(object):
 
             if len(self.user_valid_b[u]) > 0:
                 seq_b = self.generate_validation_sequence(self.user_train_b[u], self.args.maxlen).to(self.args.device)
-
-                rated = set(self.user_train_b[u])
-                rated.add(0)
-                item_idx = [self.user_valid_b[u][0]]
-                for _ in range(100):
-                    t = np.random.randint(1, self.n_items_b + 1)
-                    while t in rated: 
-                        t = np.random.randint(1, self.n_items_b + 1)
-                    item_idx.append(t)
-
-                pred_b = -self.model.predict(seq_m.unsqueeze(0), item_idx, 'm')
+                possible_negs = np.setdiff1d(np.arange(1, self.n_items_b + 1), set(self.user_train_b[u] - self.n_items_a))
+                item_idx = [self.user_valid_b[u][0] - self.n_items_a] + np.random.choice(possible_negs, size=100, replace=False).tolist()
                 
-                ndgc, ht, rank = self.calc_metrics(pred_b)
-                NDCG_b += ndgc
-                HT_b += ht
-                rank_b += rank
+                pred_b = -self.model.predict(seq_b.unsqueeze(0), item_idx, 'b')
+                metrics = self.calc_metrics(pred_b)
+                NDCG_b += metrics[0]
+                HT_b += metrics[1]
+                rank_b += metrics[2]
                 valid_users_b += 1
                 val_loss_b += self.calc_val_loss(pred_b)
                 num_samples_b += 1
@@ -246,21 +221,15 @@ class Trainer(object):
             ## 2) RATE ITEM
             # Rated and item_idx for m
             if len(self.user_test_m[u]) > 0 and len(self.user_valid_m[u]) > 0:
-                seq_m = self.generate_test_sequence(self.user_test_m[u], self.user_train_m[u], self.user_valid_m[u], self.args.maxlen).to(self.args.device)
-                rated_m = set(self.user_train_m[u])
-                rated_m.add(0)
-                item_idx_m = [self.user_test_m[u][0]]
-                # QT: use his trick to avoid loop; this is v slow
-                for _ in range(100): # Select 100 random item not in this domain
-                    t = np.random.randint(1, self.n_items_m + 1)
-                    while t in rated_m: 
-                        t = np.random.randint(1, self.n_items_m + 1)
-                    item_idx_m.append(t)
-                pred_m = -self.model.predict(seq_m.unsqueeze(0), item_idx_m, 'm')
-                delta_NDCG_m, delta_HT_m, delta_rank_m = self.calc_metrics(pred_m)
-                NDCG_m += delta_NDCG_m
-                HT_m += delta_HT_m
-                rank_m += delta_rank_m
+                seq_m = self.generate_test_sequence(self.user_test_m[u], self.user_train_m[u], self.user_test_m[u], self.args.maxlen).to(self.args.device)
+                possible_negs = np.setdiff1d(np.arange(1, self.n_items_m + 1), set(self.user_train_m[u]))
+                item_idx = [self.user_test_m[u][0]] + np.random.choice(possible_negs, size=100, replace=False).tolist()
+
+                pred_m = -self.model.predict(seq_m.unsqueeze(0), item_idx, 'm')
+                metrics = self.calc_metrics(pred_m)
+                NDCG_m += metrics[0]
+                HT_m += metrics[1]
+                rank_m += metrics[2]
                 valid_users_m += 1
                 #print(f"NDCG_m: {NDCG_m:.4f}, HT_m: {HT_m:.4f}, Rank_m {rank_m}")
             else:
@@ -269,19 +238,14 @@ class Trainer(object):
             # Rated and item_idx for a
             if len(self.user_test_a[u]) > 0 and len(self.user_valid_a[u]) > 0:
                 seq_a = self.generate_test_sequence(self.user_test_a[u], self.user_train_a[u], self.user_valid_a[u], self.args.maxlen).to(self.args.device)
-                rated_a = set(self.user_train_a[u])
-                rated_a.add(0)
-                item_idx_a = [self.user_test_a[u][0]]
-                for _ in range(100):
-                    t = np.random.randint(1, self.n_items_a + 1)
-                    while t in rated_a: 
-                        t = np.random.randint(1, self.n_items_a + 1)
-                    item_idx_a.append(t)
-                pred_a = -self.model.predict(seq_a.unsqueeze(0), item_idx_a, 'a')
-                delta_NDCG_a, delta_HT_a, delta_rank_a = self.calc_metrics(pred_a)
-                NDCG_a += delta_NDCG_a
-                HT_a += delta_HT_a
-                rank_a += delta_rank_a
+                possible_negs = np.setdiff1d(np.arange(1, self.n_items_a + 1), set(self.user_train_a[u]))
+                item_idx = [self.user_test_a[u][0]] + np.random.choice(possible_negs, size=100, replace=False).tolist()
+
+                pred_a = -self.model.predict(seq_a.unsqueeze(0), item_idx, 'a')
+                metrics = self.calc_metrics(pred_a)
+                NDCG_a += metrics[0]
+                HT_a += metrics[1]
+                rank_a += metrics[2]
                 valid_users_a += 1
                 #print(f"NDCG_a: {NDCG_a:.4f}, HT_a: {HT_a:.4f}, Rank_a {rank_a}")
             else:
@@ -290,20 +254,14 @@ class Trainer(object):
             # Rated and item_idx for b
             if len(self.user_test_b[u]) > 0 and len(self.user_valid_b[u]) > 0:
                 seq_b = self.generate_test_sequence(self.user_test_b[u], self.user_train_b[u], self.user_valid_b[u], self.args.maxlen).to(self.args.device)
-                rated_b = set(self.user_train_b[u])
-                rated_b.add(0)
-                item_idx_b = [self.user_test_b[u][0]]
-                for _ in range(100):
-                    t = np.random.randint(1, self.n_items_b + 1)
-                    while t in rated_b: 
-                        t = np.random.randint(1, self.n_items_b + 1)
-                    item_idx_b.append(t)
-                #pred_b = -self.model.predict(seq_b.unsqueeze(0), item_idx_b, 'b')
-                pred_b = -self.model.predict(seq_m.unsqueeze(0), item_idx_m, 'm')
-                delta_NDCG_b, delta_HT_b, delta_rank_b = self.calc_metrics(pred_b)
-                NDCG_b += delta_NDCG_b
-                HT_b += delta_HT_b
-                rank_b += delta_rank_b
+                possible_negs = np.setdiff1d(np.arange(1, self.n_items_b + 1), set(self.user_train_b[u] - self.n_items_a))
+                item_idx = [self.user_test_b[u][0] - self.n_items_a] + np.random.choice(possible_negs, size=100, replace=False).tolist()
+
+                pred_b = -self.model.predict(seq_b.unsqueeze(0), item_idx, 'b')
+                metrics = self.calc_metrics(pred_b)
+                NDCG_b += metrics[0]
+                HT_b += metrics[1]
+                rank_b += metrics[2]
                 valid_users_b += 1
                 #print(f"NDCG_b: {NDCG_b:.4f}, HT_b: {HT_b:.4f}, Rank_b {rank_b}")
             else:
@@ -336,7 +294,7 @@ class Trainer(object):
         if rank < target_rank:
             NDCG += 1 / np.log2(rank + 2)
             HT += 1
-        return NDCG, HT, rank
+        return (NDCG, HT, rank)
     
     def generate_test_sequence(self, user_test, user_train, user_valid, maxlen):
         if len(user_test) < 1:
