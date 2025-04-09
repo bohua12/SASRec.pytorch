@@ -29,6 +29,7 @@ def data_partition(fname, fraw, args):
             u = int(line[0])
             for ui in line[1:][-args.maxlen:]:
                 User[u].append(int(ui.split('|')[0]))    
+        minA, minB = 999, 999
         for user in User:
             nfeedback = len(User[user])
             user_tensor = torch.LongTensor(User[user])
@@ -50,30 +51,20 @@ def data_partition(fname, fraw, args):
 
                 user_train_a[user] = user_tensor[:-2][user_tensor[:-2] < n_items_a]
                 user_train_b[user] = user_tensor[:-2][user_tensor[:-2] >= n_items_a]
-
+                minA,minB = min(minA, len(user_train_a[user])), min(minB, len(user_train_b[user]))
                 user_valid_a[user] = user_tensor[-2:-1] if user_tensor[-2] < n_items_a else torch.LongTensor([])
                 user_valid_b[user] = user_tensor[-2:-1] if user_tensor[-2] >= n_items_a else torch.LongTensor([])
 
                 user_test_a[user] = user_tensor[-1:] if user_tensor[-1] < n_items_a else torch.LongTensor([])
                 user_test_b[user] = user_tensor[-1:] if user_tensor[-1] >= n_items_a else torch.LongTensor([])
 
-
-    print(f"user_train_a: {len(user_train_a)}")
-    print(f"user_valid_a: {len(user_valid_a)}")
-    print(f"user_test_a: {len(user_test_a)}")
-
-    print(f"user_train_b: {len(user_train_b)}")
-    print(f"user_valid_b: {len(user_valid_b)}")
-    print(f"user_test_b: {len(user_test_b)}")
-
-    print(f"user_train_m: {len(user_train_m)}")
-    print(f"user_valid_m: {len(user_valid_m)}")
-    print(f"user_test_m: {len(user_test_m)}")
-
     n_users = len(user_train_m)
     print(n_users)
     
     n_items_m = n_items_a + n_items_b
+    print("n_items_m", n_items_m)
+    print("n_items_a", n_items_a)
+    print("n_items_b", n_items_b)
 
     return (
         user_train_m, user_valid_m, user_test_m,
@@ -145,6 +136,8 @@ class CDSRDataset(Dataset):
         seq_m, pos_m, neg_m = self.build_sequence(self.train_m[uid], self.itemnum_m)
         seq_a, pos_a, neg_a = self.build_sequence(self.train_a[uid], self.itemnum_a)
         seq_b, pos_b, neg_b = self.build_sequence(self.train_b[uid], self.itemnum_b)
+        neg_b += self.itemnum_a  # shift B-domain neg samples to global item ID space
+
 
         return (
             uid,

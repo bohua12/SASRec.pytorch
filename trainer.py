@@ -187,7 +187,7 @@ class Trainer(object):
                         t = np.random.randint(1, self.n_items_b + 1)
                     item_idx.append(t)
 
-                pred_b = -self.model.predict(seq_b.unsqueeze(0), item_idx, 'b')
+                pred_b = -self.model.predict(seq_m.unsqueeze(0), item_idx, 'm')
                 
                 ndgc, ht, rank = self.calc_metrics(pred_b)
                 NDCG_b += ndgc

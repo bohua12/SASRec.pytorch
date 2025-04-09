@@ -85,11 +85,12 @@ class Encoder(torch.nn.Module):
 # in case your pytorch version is below 1.16 or for other reasons
 # https://github.com/pmixer/TiSASRec.pytorch/blob/master/model.py
 class CDSR(torch.nn.Module):
-    def __init__(self, user_num, item_num_m, item_num_b, item_num_a, args):
+    def __init__(self, user_num, item_num_m, item_num_a, item_num_b, args):
         super(CDSR, self).__init__()
         self.args = args
         self.user_num = user_num
         self.item_num = item_num_m
+        self.item_num_a = item_num_a
 
         # === SHARED EMBEDDINGS ===
         ## IIIA: Embedding Layer - Create item embedding (represent item)
@@ -138,21 +139,18 @@ class CDSR(torch.nn.Module):
         score_m = self.lin_m(log_feats_m)
         score_a = self.lin_a(log_feats_a)
         score_b = self.lin_b(log_feats_b)
+        #torch.set_printoptions(threshold=torch.inf)
+        #print(neg_b)
+        pos_b = torch.where(pos_b > 0, pos_b - self.item_num_a, torch.zeros_like(pos_b))
+        neg_b = torch.where(neg_b > 0, neg_b - self.item_num_a, torch.zeros_like(neg_b))
 
         # Get positive/negative logit using gather
         pos_logits_m = torch.gather(score_m, dim=-1, index=pos_m.long().unsqueeze(-1)).squeeze(-1)
         neg_logits_m = torch.gather(score_m, dim=-1, index=neg_m.long().unsqueeze(-1)).squeeze(-1)
-
         pos_logits_a = torch.gather(score_a, dim=-1, index=pos_a.long().unsqueeze(-1)).squeeze(-1)
         neg_logits_a = torch.gather(score_a, dim=-1, index=neg_a.long().unsqueeze(-1)).squeeze(-1)
-
-        # pos_logits_b = torch.gather(score_b, dim=-1, index=pos_b.long().unsqueeze(-1)).squeeze(-1)
-        # neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.long().unsqueeze(-1)).squeeze(-1)
-
-
-
-        pos_logits_b = torch.gather(score_a, dim=-1, index=pos_a.long().unsqueeze(-1)).squeeze(-1)
-        neg_logits_b = torch.gather(score_a, dim=-1, index=neg_a.long().unsqueeze(-1)).squeeze(-1)
+        pos_logits_b = torch.gather(score_b, dim=-1, index=pos_b.long().unsqueeze(-1)).squeeze(-1)
+        neg_logits_b = torch.gather(score_b, dim=-1, index=neg_b.long().unsqueeze(-1)).squeeze(-1)
 
         return (pos_logits_m, neg_logits_m,
                 pos_logits_a, neg_logits_a,
@@ -165,10 +163,10 @@ class CDSR(torch.nn.Module):
             scores = self.lin_m(log_feats)
         elif domain == "a":
             log_feats = self.encoder_a(seqs, poss)
-            scores = self.lin_a(log_feats) # (batch_size, num_items)
+            scores = self.lin_a(log_feats)[:, -1] # (batch_size, num_items)
         else:
             log_feats = self.encoder_b(seqs, poss)
-            scores = self.lin_b(log_feats)
+            scores = self.lin_b(log_feats)[:, -1]
 
 
         # final_feat = log_feats[:, -1, :] not in use as changed to linear score
@@ -178,6 +176,8 @@ class CDSR(torch.nn.Module):
         # logits = item_embs.matmul(log_feats.unsqueeze(-1)).squeeze(-1)  # (batch_size, item_count)
 
         item_idx = torch.LongTensor(item_idx).to(self.args.device)
+        #print(scores)
+        #print("ITEM INDEX IS HERE", item_idx)
         return scores[:, item_idx]  # extract only scores for candidate items
 
 
