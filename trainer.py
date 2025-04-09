@@ -138,7 +138,7 @@ class Trainer(object):
                         t = np.random.randint(1, self.n_items_m + 1)
                     item_idx.append(t)
 
-                pred_m = -self.model.predict([seq_m], item_idx, 'm')
+                pred_m = -self.model.predict(seq_m, item_idx, 'm')
 
                 ndgc, ht, rank = self.calc_metrics(pred_m)
                 NDCG_m += ndgc
@@ -162,7 +162,7 @@ class Trainer(object):
                         t = np.random.randint(1, self.n_items_a + 1)
                     item_idx.append(t)
 
-                pred_a = -self.model.predict([seq_a], item_idx, 'a')
+                pred_a = -self.model.predict(seq_a, item_idx, 'a')
                 
                 ndgc, ht, rank = self.calc_metrics(pred_a)
                 NDCG_a += ndgc
@@ -186,7 +186,7 @@ class Trainer(object):
                         t = np.random.randint(1, self.n_items_b + 1)
                     item_idx.append(t)
 
-                pred_b = -self.model.predict([seq_b], item_idx, 'b')
+                pred_b = -self.model.predict(seq_b, item_idx, 'b')
                 
                 ndgc, ht, rank = self.calc_metrics(pred_b)
                 NDCG_b += ndgc
@@ -255,7 +255,7 @@ class Trainer(object):
                     while t in rated_m: 
                         t = np.random.randint(1, self.n_items_m + 1)
                     item_idx_m.append(t)
-                pred_m = -self.model.predict([seq_m], item_idx_m, 'm')
+                pred_m = -self.model.predict(seq_m, item_idx_m, 'm')
                 delta_NDCG_m, delta_HT_m, delta_rank_m = self.calc_metrics(pred_m)
                 NDCG_m += delta_NDCG_m
                 HT_m += delta_HT_m
@@ -276,7 +276,7 @@ class Trainer(object):
                     while t in rated_a: 
                         t = np.random.randint(1, self.n_items_a + 1)
                     item_idx_a.append(t)
-                pred_a = -self.model.predict([seq_a], item_idx_a, 'a')
+                pred_a = -self.model.predict(seq_a, item_idx_a, 'a')
                 delta_NDCG_a, delta_HT_a, delta_rank_a = self.calc_metrics(pred_a)
                 NDCG_a += delta_NDCG_a
                 HT_a += delta_HT_a
@@ -297,7 +297,7 @@ class Trainer(object):
                     while t in rated_b: 
                         t = np.random.randint(1, self.n_items_b + 1)
                     item_idx_b.append(t)
-                pred_b = -self.model.predict([seq_b], item_idx_b, 'b')
+                pred_b = -self.model.predict(seq_b, item_idx_b, 'b')
                 delta_NDCG_b, delta_HT_b, delta_rank_b = self.calc_metrics(pred_b)
                 NDCG_b += delta_NDCG_b
                 HT_b += delta_HT_b
