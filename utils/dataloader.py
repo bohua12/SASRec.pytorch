@@ -22,45 +22,39 @@ def data_partition(fname, fraw, args):
     user_train_b, user_valid_b, user_test_b = {}, {}, {}
     user_train_m, user_valid_m, user_test_m = {}, {}, {}
     
+    # NOTE: This runs on assumption that for every user, it has atleast 3 item per domain. 
     with open(join('data', fname, fraw), 'r', encoding='utf-8') as f:
         for line in f:
-            seq = []
             line = line.strip().split(' ')
             u = int(line[0])
             for ui in line[1:][-args.maxlen:]:
                 User[u].append(int(ui.split('|')[0]))    
-        minA, minB = 999, 999
         for user in User:
-            nfeedback = len(User[user])
             user_tensor = torch.LongTensor(User[user])
-            if nfeedback < 3:
-                user_train_m[user] = user_tensor
-                user_valid_m[user] = torch.LongTensor([])
-                user_test_m[user] = torch.LongTensor([])
-
-                user_train_a[user] = user_tensor[user_tensor < n_items_a]
-                user_train_b[user] = user_tensor[user_tensor >= n_items_a]
-                user_valid_a[user] = torch.LongTensor([])
-                user_valid_b[user] = torch.LongTensor([])
-                user_test_a[user] = torch.LongTensor([])
-                user_test_b[user] = torch.LongTensor([])
+            a_items = user_tensor[user_tensor < n_items_a]
+            b_items = user_tensor[user_tensor >= n_items_a]
+            if len(a_items) < 3 or len(b_items) < 3:
+                # TODO: Initialise empty tensor for that user. But for now ignore as it will have downstream impact
+                print("not suppoused to happen")
             else:
                 user_train_m[user] = user_tensor[:-2]
                 user_valid_m[user] = user_tensor[-2:-1]
                 user_test_m[user] = user_tensor[-1:]
 
-                user_train_a[user] = user_tensor[:-2][user_tensor[:-2] < n_items_a]
-                user_train_b[user] = user_tensor[:-2][user_tensor[:-2] >= n_items_a]
-                minA,minB = min(minA, len(user_train_a[user])), min(minB, len(user_train_b[user]))
-                user_valid_a[user] = user_tensor[-2:-1] if user_tensor[-2] < n_items_a else torch.LongTensor([])
-                user_valid_b[user] = user_tensor[-2:-1] if user_tensor[-2] >= n_items_a else torch.LongTensor([])
+                user_train_a[user] = a_items[:-2]
+                user_valid_a[user] = a_items[-2:-1]
+                user_test_a[user] = a_items[-1:]
 
-                user_test_a[user] = user_tensor[-1:] if user_tensor[-1] < n_items_a else torch.LongTensor([])
-                user_test_b[user] = user_tensor[-1:] if user_tensor[-1] >= n_items_a else torch.LongTensor([])
+                user_train_b[user] = b_items[:-2]
+                user_valid_b[user] = b_items[-2:-1]
+                user_test_b[user] = b_items[-1:]
+                # print(f"User {user}: Train_M={len(user_train_m[user])}, Valid_M={len(user_valid_m[user])}, Test_M={len(user_test_m[user])}")
+                # print(f"User {user}: Train_A={len(user_train_a[user])}, Valid_A={len(user_valid_a[user])}, Test_A={len(user_test_a[user])}")
+                # print(f"User {user}: Train_B={len(user_train_b[user])}, Valid_B={len(user_valid_b[user])}, Test_B={len(user_test_b[user])}")
+                # print("")
 
     n_users = len(user_train_m)
     print(n_users)
-    
     n_items_m = n_items_a + n_items_b
     print("n_items_m", n_items_m)
     print("n_items_a", n_items_a)

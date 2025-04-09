@@ -202,7 +202,7 @@ class Trainer(object):
 
         self.model.eval()
 
-        NDCG_m, HT_m, NDCG_a, HT_a, NDCG_b, HT_b = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  # filepath: c:\Users\leebo\SASRec.pytorch\trainer.py        valid_users_m, valid_users_a, valid_users_b= 0, 0, 0 
+        NDCG_m, HT_m, NDCG_a, HT_a, NDCG_b, HT_b = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  
         invalid_m, invalid_a, invalid_b = 0, 0, 0
         valid_users_m, valid_users_b, valid_users_a = 0, 0, 0
         rank_m, rank_a, rank_b = 0,0,0
@@ -210,9 +210,6 @@ class Trainer(object):
         users = range(self.n_users)
 
         for u in users:
-            # if len(self.user_test_m[u]) < 1: 
-            #     continue
-
             ## 1) GENERATE SEQUENCE
             # Reconstruct user sequence from train + valid for all 3 domains
             # seq[] = train[u] + valid[u] (then we predict test[u])
@@ -220,7 +217,7 @@ class Trainer(object):
 
             ## 2) RATE ITEM
             # Rated and item_idx for m
-            if len(self.user_test_m[u]) > 0 and len(self.user_valid_m[u]) > 0:
+            if len(self.user_test_m[u]) > 0:
                 seq_m = self.generate_test_sequence(self.user_test_m[u], self.user_train_m[u], self.user_test_m[u], self.args.maxlen).to(self.args.device)
                 possible_negs = np.setdiff1d(np.arange(1, self.n_items_m + 1), set(self.user_train_m[u]))
                 item_idx = [self.user_test_m[u][0]] + np.random.choice(possible_negs, size=100, replace=False).tolist()
@@ -236,7 +233,7 @@ class Trainer(object):
                 invalid_m += 1
 
             # Rated and item_idx for a
-            if len(self.user_test_a[u]) > 0 and len(self.user_valid_a[u]) > 0:
+            if len(self.user_test_a[u]) > 0:
                 seq_a = self.generate_test_sequence(self.user_test_a[u], self.user_train_a[u], self.user_valid_a[u], self.args.maxlen).to(self.args.device)
                 possible_negs = np.setdiff1d(np.arange(1, self.n_items_a + 1), set(self.user_train_a[u]))
                 item_idx = [self.user_test_a[u][0]] + np.random.choice(possible_negs, size=100, replace=False).tolist()
@@ -252,13 +249,14 @@ class Trainer(object):
                 invalid_a += 1
 
             # Rated and item_idx for b
-            if len(self.user_test_b[u]) > 0 and len(self.user_valid_b[u]) > 0:
+            if len(self.user_test_b[u]) > 0:
                 seq_b = self.generate_test_sequence(self.user_test_b[u], self.user_train_b[u], self.user_valid_b[u], self.args.maxlen).to(self.args.device)
                 possible_negs = np.setdiff1d(np.arange(1, self.n_items_b + 1), set(self.user_train_b[u] - self.n_items_a))
                 item_idx = [self.user_test_b[u][0] - self.n_items_a] + np.random.choice(possible_negs, size=100, replace=False).tolist()
 
                 pred_b = -self.model.predict(seq_b.unsqueeze(0), item_idx, 'b')
                 metrics = self.calc_metrics(pred_b)
+
                 NDCG_b += metrics[0]
                 HT_b += metrics[1]
                 rank_b += metrics[2]
