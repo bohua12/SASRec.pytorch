@@ -155,23 +155,24 @@ class CDSR(torch.nn.Module):
                 pos_logits_a, neg_logits_a,
                 pos_logits_b, neg_logits_b)
 
-    def predict(self, seq, item_idx, domain):
-        item_idx = torch.LongTensor(item_idx).to(self.args.device)
-        seqs, poss = self.generate_input_embedding(seq)
-        if domain == "m":
-            log_feats = self.encoder_m(seqs, poss)[:, -1] # [:,-1] because we ONLY want to capture the final sequence
-            scores = self.lin_m(log_feats)
-        elif domain == "a":
-            log_feats = self.encoder_a(seqs, poss)
-            scores = self.lin_a(log_feats)[:, -1] # (batch_size, num_items)
-        else:
-            log_feats = self.encoder_b(seqs, poss)
-            scores = self.lin_b(log_feats)[:, -1]
-            #item_idx = [i - self.item_num_a for i in item_idx if i > 0]  # skip padding
-        # print("FROM PREDICT")
-        # print(scores[:, item_idx])
-        # print("")
-        return scores[:, item_idx]  # extract only scores for candidate items
+def predict(self, seq, item_idx, domain):
+    item_idx = torch.LongTensor(item_idx).to(self.args.device)
+    seqs, poss = self.generate_input_embedding(seq)
+
+    shared_feats = self.encoder_m(seqs, poss)[:, -1]  # assuming encoder_m is shared
+
+    if domain == "a":
+        specific_feats = self.encoder_a(seqs, poss)[:, -1]
+        combined = shared_feats + specific_feats
+        scores = self.lin_a(combined)
+    elif domain == "b":
+        specific_feats = self.encoder_b(seqs, poss)[:, -1]
+        combined = shared_feats + specific_feats
+        scores = self.lin_b(combined)
+    else:
+        scores = self.lin_m(shared_feats)  # shared-only
+
+    return scores[:, item_idx]
 
 def init_weights(model):
     """
