@@ -155,41 +155,41 @@ class CDSR(torch.nn.Module):
                 pos_logits_a, neg_logits_a,
                 pos_logits_b, neg_logits_b)
 
-def predict(self, seq, item_idx, domain):
-    item_idx = torch.LongTensor(item_idx).to(self.args.device)
-    seqs, poss = self.generate_input_embedding(seq)
+    def predict(self, seq, item_idx, domain):
+        item_idx = torch.LongTensor(item_idx).to(self.args.device)
+        seqs, poss = self.generate_input_embedding(seq)
 
-    shared_feats = self.encoder_m(seqs, poss)[:, -1]  # assuming encoder_m is shared
+        shared_feats = self.encoder_m(seqs, poss)[:, -1]  # assuming encoder_m is shared
 
-    if domain == "a":
-        specific_feats = self.encoder_a(seqs, poss)[:, -1]
-        combined = shared_feats + specific_feats
-        scores = self.lin_a(combined)
-    elif domain == "b":
-        specific_feats = self.encoder_b(seqs, poss)[:, -1]
-        combined = shared_feats + specific_feats
-        scores = self.lin_b(combined)
-    else:
-        scores = self.lin_m(shared_feats)  # shared-only
+        if domain == "a":
+            specific_feats = self.encoder_a(seqs, poss)[:, -1]
+            combined = shared_feats + specific_feats
+            scores = self.lin_a(combined)
+        elif domain == "b":
+            specific_feats = self.encoder_b(seqs, poss)[:, -1]
+            combined = shared_feats + specific_feats
+            scores = self.lin_b(combined)
+        else:
+            scores = self.lin_m(shared_feats)  # shared-only
 
-    return scores[:, item_idx]
+        return scores[:, item_idx]
 
-def init_weights(model):
-    """
-    Initializes model weights using appropriate distributions.
-    - Linear layers: Normal(mean=0, std=0.02), bias=0
-    - Embeddings: Normal(mean=0, std=0.02)
-    - LayerNorm: Weight=1, Bias=0
-    """
-    for m in model.modules():
-        if isinstance(m, torch.nn.Linear):
-            torch.nn.init.normal_(m.weight.data, mean=0.0, std=0.02)
-            if m.bias is not None:
+    def init_weights(model):
+        """
+        Initializes model weights using appropriate distributions.
+        - Linear layers: Normal(mean=0, std=0.02), bias=0
+        - Embeddings: Normal(mean=0, std=0.02)
+        - LayerNorm: Weight=1, Bias=0
+        """
+        for m in model.modules():
+            if isinstance(m, torch.nn.Linear):
+                torch.nn.init.normal_(m.weight.data, mean=0.0, std=0.02)
+                if m.bias is not None:
+                    torch.nn.init.zeros_(m.bias.data)
+
+            elif isinstance(m, (torch.nn.Embedding, torch.nn.Parameter)):
+                torch.nn.init.normal_(m.weight.data, mean=0.0, std=0.02)
+
+            elif isinstance(m, torch.nn.LayerNorm):
+                torch.nn.init.ones_(m.weight.data)
                 torch.nn.init.zeros_(m.bias.data)
-
-        elif isinstance(m, (torch.nn.Embedding, torch.nn.Parameter)):
-            torch.nn.init.normal_(m.weight.data, mean=0.0, std=0.02)
-
-        elif isinstance(m, torch.nn.LayerNorm):
-            torch.nn.init.ones_(m.weight.data)
-            torch.nn.init.zeros_(m.bias.data)
