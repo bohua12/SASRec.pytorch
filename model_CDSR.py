@@ -156,20 +156,38 @@ class CDSR(torch.nn.Module):
                 pos_logits_b, neg_logits_b)
 
     def predict(self, seq, item_idx, domain):
+        """
+        Predicts scores for a list of candidate item indices based on the input sequence and domain.
+
+        Uses a shared encoder (`encoder_m`) and domain-specific encoders (`encoder_a`, `encoder_b`)
+        along with their respective linear layers. The final prediction score is a combination of 
+        domain-specific and shared scores, averaged together.
+
+        Args:
+            seq (torch.Tensor): Input sequence tensor of shape (1, maxlen).
+            item_idx (List[int]): List of item indices to score.
+            domain (str): Domain identifier ('m', 'a', or 'b').
+
+        Returns:
+            torch.Tensor: Scores of shape (1, len(item_idx)) for the given candidate items.
+        """
         item_idx = torch.LongTensor(item_idx).to(self.args.device)
         seqs, poss = self.generate_input_embedding(seq)
-        if domain == "m":
-            log_feats = self.encoder_m(seqs, poss)[:, -1] # [:,-1] because we ONLY want to capture the final sequence
-            scores = self.lin_m(log_feats)
-        elif domain == "a":
-            log_feats = self.encoder_a(seqs, poss)
-            scores = self.lin_a(log_feats)[:, -1] # (batch_size, num_items)
-        else:
-            log_feats = self.encoder_b(seqs, poss)
-            scores = self.lin_b(log_feats)[:, -1]
-            #item_idx = [i - self.item_num_a for i in item_idx if i > 0]  # skip padding
 
-        return scores[:, item_idx]  # extract only scores for candidate items
+        # SHAREd ENCODER
+        shared_feat = self.encoder_m(seqs, poss)[:, -1]
+        shared_scores = self.lin_m(shared_feat)
+        if domain == "m": # No need to calculate encoding agn
+            return shared_scores[:, item_idx]
+        elif domain == "a":
+            domain_feat = self.encoder_a(seqs, poss)[:, -1]
+            domain_scores = self.lin_a(domain_feat)
+        else:
+            domain_feat = self.encoder_b(seqs, poss)[:, -1]
+            domain_scores = self.lin_b(domain_feat)
+
+        combined_scores = (shared_scores + domain_scores) / 2.0
+        return combined_scores[:, item_idx]  # extract only scores for candidate items
 
 def init_weights(model):
     """
