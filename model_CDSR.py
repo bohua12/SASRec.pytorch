@@ -168,7 +168,9 @@ class CDSR(torch.nn.Module):
             log_feats = self.encoder_b(seqs, poss)
             scores = self.lin_b(log_feats)[:, -1]
             #item_idx = [i - self.item_num_a for i in item_idx if i > 0]  # skip padding
-
+        print("FROM PREDICT")
+        print(scores[:, item_idx])
+        print("")
         return scores[:, item_idx]  # extract only scores for candidate items
 
 def init_weights(model):
