@@ -44,8 +44,9 @@ best_m = [-1,-1,999]
 best_a = [-1,-1,999]
 best_b = [-1,-1,999]
 best_params = {}
-num_tuning_epochs = 100
-num_warmup_epochs = 50
+num_tuning_epochs = 50
+num_warmup_epochs = 30
+itr = 1
 
 with open("best_params_100epochs.txt", "w") as f:
     for hidden, lr, dropout, weight_decay in itertools.product(hidden_units, lrs, dropout_rates, weight_decays):
@@ -57,12 +58,14 @@ with open("best_params_100epochs.txt", "w") as f:
 
         # LOAD MODEL
         trainer = Trainer(args)
-        print(f"Tuning for: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}")
-        for epoch in range(num_tuning_epochs):
+        print(f"{itr}) Tuning for: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}")
+        f.write(f"{itr}) Tuning for: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}")
+        for epoch in range(1,num_tuning_epochs+1):
             epoch_train_loss = trainer.run_epoch(epoch)
             if epoch > num_warmup_epochs and epoch%10 == 0: # Epoch 50 onwards 
                 m_valid, a_valid, b_valid = trainer.run_valid(epoch)
                 print(f"Epoch {epoch}:")
+                f.write(f"Epoch {epoch}:")
                 print(f"M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f})\n")
                 print(f"A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f})\n")
                 print(f"B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f})\n")
@@ -74,6 +77,8 @@ with open("best_params_100epochs.txt", "w") as f:
                     #best_params = {"hidden_units": hidden, "lr": lr, "dropout_rate": dropout, "weight_decay": weight_decay}
                     f.write(f"===== ABOVE IS BEST SO FAR ====\n")
                     print(f"===== ABOVE IS BEST SO FAR ====\n")
+        f.write("\n")
+        itr += 1
                                     
     f.write(f"Best OVERALL: {best_params}\n")
     print(f"M:({float(best_m[0]):.5f}, {best_m[1]:.5f}, {best_m[2]:.5f})\n")
