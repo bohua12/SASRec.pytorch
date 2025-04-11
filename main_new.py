@@ -32,7 +32,7 @@ parser.add_argument('--weight_decay', default=1e-2, type=float)
 parser.add_argument('--verification_frequency', default=5, type=int)
 parser.add_argument('--early_stopping_patience', default=50, type=int)
 parser.add_argument('--verbose', default=0, type=int)
-
+parser.add_argument('--seed', default=1111, type=int)
 
 # Create Training Directory
 args = parser.parse_args()
@@ -43,6 +43,11 @@ with open(os.path.join(args.dataset + '_' + args.train_dir, 'args.txt'), 'w') as
 f.close()
 
 if __name__ == '__main__':
+    random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    np.random.seed(args.seed)
+    os.environ['PYTHONHASHSEED'] = str(args.seed)
 
     trainer = Trainer(args)
 
