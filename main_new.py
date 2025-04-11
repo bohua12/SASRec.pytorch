@@ -54,7 +54,7 @@ if __name__ == '__main__':
     trainer = Trainer(args)
 
     epoch_start_idx = 1
-    best_m_valid_ndcg, best_a_valid_ndcg, best_b_valid_ndcg = 0.0, 0.0, 0,0
+    best_m_valid_ndcg, best_a_valid_ndcg, best_b_valid_ndcg = 0.0, 0.0, 0.0
 
 
     # SET UP LOGGING
