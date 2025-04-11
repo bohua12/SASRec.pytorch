@@ -7,6 +7,7 @@ import numpy as np
 import random
 import torch
 import os
+import time
 
 
 # Define hyperparameter grid search space
@@ -45,9 +46,12 @@ np.random.seed(args.seed)
 os.environ['PYTHONHASHSEED'] = str(args.seed)
 
 itr = 1
-
+t_start = 0
+t_end = 0
 with open("best_params_100epochs.txt", "w") as f:
     for hidden, lr, dropout, weight_decay in itertools.product(hidden_units, lrs, dropout_rates, weight_decays):
+        start_time = time.time()  # Start timing the iteration
+
         # Update args values dynamically 
         args.hidden_units = hidden
         args.lr = lr
@@ -72,6 +76,9 @@ with open("best_params_100epochs.txt", "w") as f:
                     #best_params = {"hidden_units": hidden, "lr": lr, "dropout_rate": dropout, "weight_decay": weight_decay}
                     f.write(f"===== ABOVE IS BEST SO FAR ====\n")
                     print(f"===== ABOVE IS BEST SO FAR ====\n")
+        end_time = time.time()
+        print(f"Time for iteration {itr}: {end_time - start_time:.2f} seconds")
+        f.write(f"Time for iteration {itr}: {end_time - start_time:.2f} seconds\n")
         f.write("\n")
         itr += 1
                                     
