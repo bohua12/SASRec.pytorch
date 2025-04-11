@@ -3,6 +3,8 @@ import time
 import torch
 import argparse
 from torch.utils.data import DataLoader
+import random
+from numpy import np
 
 from model import SASRec, init_weights
 from utils import *
