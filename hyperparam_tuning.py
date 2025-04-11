@@ -66,9 +66,6 @@ with open("best_params_100epochs.txt", "w") as f:
                 m_valid, a_valid, b_valid = trainer.run_valid(epoch)
                 print(f"Epoch {epoch}:")
                 f.write(f"Epoch {epoch}:")
-                print(f"M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f})\n")
-                print(f"A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f})\n")
-                print(f"B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f})\n")
                 f.write(f"M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f})\n")
                 f.write(f"A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f})\n")
                 f.write(f"B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f})\n")
@@ -81,9 +78,9 @@ with open("best_params_100epochs.txt", "w") as f:
         itr += 1
                                     
     f.write(f"Best OVERALL: {best_params}\n")
-    print(f"M:({float(best_m[0]):.5f}, {best_m[1]:.5f}, {best_m[2]:.5f})\n")
-    print(f"A:({float(best_a[0]):.5f}, {best_a[1]:.5f}, {best_a[2]:.5f})\n")
-    print(f"B:({float(best_b[0]):.5f}, {best_b[1]:.5f}, {best_b[2]:.5f})\n")
+    print(f"M:({float(best_m[0]):.5f}, {best_m[1]:.5f}, {best_m[2]:.5f})")
+    print(f"A:({float(best_a[0]):.5f}, {best_a[1]:.5f}, {best_a[2]:.5f})")
+    print(f"B:({float(best_b[0]):.5f}, {best_b[1]:.5f}, {best_b[2]:.5f})")
     f.write(f"M:({float(best_m[0]):.5f}, {best_m[1]:.5f}, {best_m[2]:.5f})\n")
     f.write(f"A:({float(best_a[0]):.5f}, {best_a[1]:.5f}, {best_a[2]:.5f})\n")
     f.write(f"B:({float(best_b[0]):.5f}, {best_b[1]:.5f}, {best_b[2]:.5f})\n")
