@@ -23,21 +23,21 @@ parser.add_argument('--num_heads', default=1, type=int)
 parser.add_argument('--l2_emb', default=0.0, type=float)
 args = parser.parse_args()
 print("Hyperparameter tuning")
-# Load dataset 
-print("Loading data...")
-args.verbose=0
+# # Load dataset 
+# print("Loading data...")
+# args.verbose=0
 
-# Load and Split data into Train/Test/Valid
-[
-user_train_m, user_valid_m, user_test_m,
-user_train_a, user_valid_a, user_test_a,
-user_train_b, user_valid_b, user_test_b,
-n_users, n_items_m, n_items_a, n_items_b
-] = data_partition("abe", "abe_50_preprocessed.txt", args)
+# # Load and Split data into Train/Test/Valid
+# [
+# user_train_m, user_valid_m, user_test_m,
+# user_train_a, user_valid_a, user_test_a,
+# user_train_b, user_valid_b, user_test_b,
+# n_users, n_items_m, n_items_a, n_items_b
+# ] = data_partition("abe", "abe_50_preprocessed.txt", args)
 
-# Get dataloader for training dataset
-dl = get_dataloader(user_train_m, user_train_a, user_train_b, n_users, n_items_m, n_items_a, n_items_b, args)
-print("Data loaded successfully!\n")
+# # Get dataloader for training dataset
+# dl = get_dataloader(user_train_m, user_train_a, user_train_b, n_users, n_items_m, n_items_a, n_items_b, args)
+# print("Data loaded successfully!\n")
 
 # Tuning Loop
 best_m = [-1,-1,999]
