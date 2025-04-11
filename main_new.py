@@ -54,12 +54,25 @@ if __name__ == '__main__':
     trainer = Trainer(args)
 
     epoch_start_idx = 1
-    best_val_ndcg, best_val_hr = 0.0, 0.0
+    best_m_valid_ndcg, best_a_valid_ndcg, best_b_valid_ndcg = 0.0, 0.0
 
 
     # SET UP LOGGING
-    f = open(os.path.join(args.dataset + '_' + args.train_dir, 'log.txt'), 'w')
-    f.write('epoch (val_ndcg, val_hr, val_loss) (test_ndcg, test_hr)\n')
+    # Generate a unique log file name
+    log_dir = args.dataset + '_' + args.train_dir
+    log_file = 'log.txt'
+    log_path = os.path.join(log_dir, log_file)
+
+    # Increment the filename if it already exists
+    counter = 1
+    while os.path.exists(log_path):
+        log_file = f'log{counter}.txt'
+        log_path = os.path.join(log_dir, log_file)
+        counter += 1
+
+    # Open the unique log file for writing
+    f = open(log_path, 'w')
+    f.write('epoch domain:(val_ndcg, val_hr, val_loss) (test_ndcg, test_hr)\n')
 
     ## TOTAL training time
     T = 0.0
@@ -81,15 +94,16 @@ if __name__ == '__main__':
             t1 = time.time() - t0
             T += t1
             ## Eval test and validation performance
-            t_test = trainer.run_test(epoch)
-            t_valid = trainer.run_valid(epoch)
-            print('epoch:%d, time taken: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f, validLoss: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
-                    % (epoch, t1, t_valid[0], t_valid[1], t_valid[2], t_test[0], t_test[1]))
-
+            m_test, a_test, b_test = trainer.run_test(epoch)
+            m_valid, a_valid, b_valid = trainer.run_valid(epoch)
+            # print('epoch:%d, time taken: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f, validLoss: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
+            #         % (epoch, t1, t_valid[0], t_valid[1], t_valid[2], t_test[0], t_test[1]))
+            print(f"Epoch {epoch}, Time Taken: {t1}(s)")
             ## Save model only if either of the Validation Metrics improve (Not training Metrics)
-            if t_valid[0] > best_val_ndcg or t_valid[1] > best_val_hr:
-                best_val_ndcg = max(t_valid[0], best_val_ndcg)
-                best_val_hr = max(t_valid[1], best_val_hr)
+            if m_valid[0] > best_m_valid_ndcg or a_valid[0] > best_a_valid_ndcg or b_valid[0] > best_b_valid_ndcg:
+                best_m_valid_ndcg = max(m_valid[0], best_m_valid_ndcg)
+                best_a_valid_ndcg = max(a_valid[0], best_a_valid_ndcg)
+                best_b_valid_ndcg = max(b_valid[0], best_b_valid_ndcg)
                 folder = args.dataset + '_' + args.train_dir
                 fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
                 fname = fname.format(epoch, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
@@ -101,9 +115,11 @@ if __name__ == '__main__':
                 epochs_since_improvement += args.verification_frequency
                 print(f"{epochs_since_improvement} epochs since the last improvement in Validation NDCG/HR")
             # NEW SCHEDULER HERE!
-            trainer.scheduler.step(t_valid[0])  # if you're monitoring NDCG
+            trainer.scheduler.step(m_valid[0])  # if you're monitoring NDCG
             ## Log results in log.txt
-            f.write(str(epoch) + ' ' + str(t_valid) + ' ' + str(t_test) + '\n')
+            f.write(str(epoch) + ' M:' + str(m_valid) + ' ' + str(m_test) + '\n')
+            f.write(str(epoch) + ' A:' + str(a_valid) + ' ' + str(a_test) + '\n')
+            f.write(str(epoch) + ' B:' + str(b_valid) + ' ' + str(b_test) + '\n')
             f.flush()
 
             ## Activate early stoppage if patience is exceeded
