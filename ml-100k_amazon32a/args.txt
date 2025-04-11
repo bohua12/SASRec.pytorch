@@ -1,0 +1,15 @@
+batch_size,128
+dataset,ml-100k
+device,cpu
+dropout_rate,0.1
+early_stopping_patience,50
+hidden_units,32
+lr,0.005
+maxlen,200
+num_blocks,2
+num_epochs,1000
+num_heads,1
+train_dir,amazon32a
+verbose,0
+verification_frequency,1
+weight_decay,0.01

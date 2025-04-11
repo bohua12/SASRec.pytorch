@@ -1,0 +1,445 @@
+Epoch 63 trg loss: 3.0187 | LR: 0.002500
+Epoch 63 trg loss: 3.0187 | LR: 0.002500
+10 epochs since the last improvement in Validation NDCG/HR
+Epoch 56 trg loss: 3.1089 | LR: 0.002500
+Epoch 57 trg loss: 3.0529 | LR: 0.002500
+Epoch 58 trg loss: 3.0221 | LR: 0.002500
+Epoch 59 trg loss: 3.0203 | LR: 0.002500
+Epoch 60 trg loss: 3.0253 | LR: 0.002500
+Testing on epoch 60...
+M: 4474/4474 NDCG_m: 0.1764, HT_m: 0.3333, avgrank_m: 35.7193
+A: 4474/4474 NDCG_a: 0.2067, HT_a: 0.3994, avgrank_a: 33.4873
+B: 4474/4474 NDCG_b: 0.1982, HT_b: 0.3438, avgrank_b: 35.8353
+Validating on epoch 60
+M: 4474/4474 NDCG_m: 0.2246, HT_m: 0.4113, avgrank_m: 31.4059, val_loss_m: 1.7119
+A: 4474/4474 NDCG_a: 0.2570, HT_a: 0.4638, avgrank_a: 29.7599, val_loss_a: 1.7631
+B: 4474/4474 NDCG_b: 0.2367, HT_b: 0.4032, avgrank_b: 30.6784, val_loss_b: 1.7393
+epoch:60, time taken: 72.642842(s), valid (NDCG@10: 0.2246, HR@10: 0.4113, validLoss: 1.7119), test (NDCG@10: 0.1764, HR@10: 0.3333)
+Epoch 61 trg loss: 3.0264 | LR: 0.002500
+Epoch 62 trg loss: 3.0162 | LR: 0.002500
+Epoch 63 trg loss: 3.0187 | LR: 0.002500
+Epoch 64 trg loss: 3.0182 | LR: 0.002500
+Epoch 65 trg loss: 2.9984 | LR: 0.002500
+Testing on epoch 65...
+M: 4474/4474 NDCG_m: 0.1797, HT_m: 0.3388, avgrank_m: 35.5190
+A: 4474/4474 NDCG_a: 0.2150, HT_a: 0.4066, avgrank_a: 32.9298
+B: 4474/4474 NDCG_b: 0.1993, HT_b: 0.3424, avgrank_b: 35.4993
+Validating on epoch 65
+M: 4474/4474 NDCG_m: 0.2255, HT_m: 0.4075, avgrank_m: 31.3029, val_loss_m: 1.7489
+A: 4474/4474 NDCG_a: 0.2636, HT_a: 0.4649, avgrank_a: 29.5103, val_loss_a: 1.9007
+B: 4474/4474 NDCG_b: 0.2381, HT_b: 0.4048, avgrank_b: 30.5367, val_loss_b: 1.7285
+epoch:65, time taken: 72.603855(s), valid (NDCG@10: 0.2255, HR@10: 0.4075, validLoss: 1.7489), test (NDCG@10: 0.1797, HR@10: 0.3388)
+Epoch 66 trg loss: 2.9918 | LR: 0.002500
+Epoch 67 trg loss: 2.9853 | LR: 0.002500
+Epoch 68 trg loss: 2.9884 | LR: 0.002500
+Epoch 69 trg loss: 2.9859 | LR: 0.002500
+Epoch 70 trg loss: 2.9912 | LR: 0.002500
+Testing on epoch 70...
+M: 4474/4474 NDCG_m: 0.1780, HT_m: 0.3366, avgrank_m: 35.7257
+A: 4474/4474 NDCG_a: 0.1971, HT_a: 0.3802, avgrank_a: 33.6656
+B: 4474/4474 NDCG_b: 0.1971, HT_b: 0.3364, avgrank_b: 35.6591
+Validating on epoch 70
+M: 4474/4474 NDCG_m: 0.2245, HT_m: 0.4104, avgrank_m: 31.5787, val_loss_m: 1.5915
+A: 4474/4474 NDCG_a: 0.2486, HT_a: 0.4526, avgrank_a: 30.0065, val_loss_a: 2.0921
+B: 4474/4474 NDCG_b: 0.2372, HT_b: 0.4005, avgrank_b: 30.6547, val_loss_b: 1.7823
+epoch:70, time taken: 72.711833(s), valid (NDCG@10: 0.2245, HR@10: 0.4104, validLoss: 1.5915), test (NDCG@10: 0.1780, HR@10: 0.3366)
+5 epochs since the last improvement in Validation NDCG/HR
+Epoch 71 trg loss: 2.9954 | LR: 0.002500
+Epoch 72 trg loss: 2.9954 | LR: 0.002500
+Epoch 73 trg loss: 2.9827 | LR: 0.002500
+Epoch 74 trg loss: 2.9755 | LR: 0.002500
+Epoch 75 trg loss: 2.9696 | LR: 0.002500
+Testing on epoch 75...
+M: 4474/4474 NDCG_m: 0.1784, HT_m: 0.3346, avgrank_m: 35.5545
+A: 4474/4474 NDCG_a: 0.2112, HT_a: 0.4113, avgrank_a: 32.8243
+B: 4474/4474 NDCG_b: 0.1970, HT_b: 0.3386, avgrank_b: 35.5360
+Validating on epoch 75
+M: 4474/4474 NDCG_m: 0.2225, HT_m: 0.4075, avgrank_m: 31.1473, val_loss_m: 1.6961
+A: 4474/4474 NDCG_a: 0.2589, HT_a: 0.4631, avgrank_a: 29.8122, val_loss_a: 2.1201
+B: 4474/4474 NDCG_b: 0.2396, HT_b: 0.4081, avgrank_b: 30.4738, val_loss_b: 1.8968
+epoch:75, time taken: 72.600608(s), valid (NDCG@10: 0.2225, HR@10: 0.4075, validLoss: 1.6961), test (NDCG@10: 0.1784, HR@10: 0.3346)
+10 epochs since the last improvement in Validation NDCG/HR
+Epoch 76 trg loss: 2.9662 | LR: 0.002500
+Epoch 77 trg loss: 2.9715 | LR: 0.002500
+Epoch 78 trg loss: 2.9886 | LR: 0.002500
+Epoch 79 trg loss: 2.9701 | LR: 0.002500
+Epoch 80 trg loss: 2.9817 | LR: 0.002500
+Testing on epoch 80...
+M: 4474/4474 NDCG_m: 0.1797, HT_m: 0.3413, avgrank_m: 35.3552
+A: 4474/4474 NDCG_a: 0.1915, HT_a: 0.3905, avgrank_a: 33.7416
+B: 4474/4474 NDCG_b: 0.1970, HT_b: 0.3375, avgrank_b: 35.6551
+Validating on epoch 80
+M: 4474/4474 NDCG_m: 0.2261, HT_m: 0.4126, avgrank_m: 31.1439, val_loss_m: 1.8167
+A: 4474/4474 NDCG_a: 0.2432, HT_a: 0.4504, avgrank_a: 30.3610, val_loss_a: 2.0582
+B: 4474/4474 NDCG_b: 0.2360, HT_b: 0.4034, avgrank_b: 30.6415, val_loss_b: 1.8719
+epoch:80, time taken: 72.660601(s), valid (NDCG@10: 0.2261, HR@10: 0.4126, validLoss: 1.8167), test (NDCG@10: 0.1797, HR@10: 0.3413)
+Epoch 81 trg loss: 2.9758 | LR: 0.002500
+Epoch 82 trg loss: 2.9566 | LR: 0.002500
+Epoch 83 trg loss: 2.9422 | LR: 0.002500
+Epoch 84 trg loss: 2.9437 | LR: 0.002500
+Epoch 85 trg loss: 2.9533 | LR: 0.002500
+Testing on epoch 85...
+M: 4474/4474 NDCG_m: 0.1812, HT_m: 0.3409, avgrank_m: 35.6732
+A: 4474/4474 NDCG_a: 0.2143, HT_a: 0.4012, avgrank_a: 33.0831
+B: 4474/4474 NDCG_b: 0.1969, HT_b: 0.3395, avgrank_b: 35.5548
+Validating on epoch 85
+Testing on epoch 60...
+M: 4474/4474 NDCG_m: 0.1764, HT_m: 0.3333, avgrank_m: 35.7193
+A: 4474/4474 NDCG_a: 0.2067, HT_a: 0.3994, avgrank_a: 33.4873
+B: 4474/4474 NDCG_b: 0.1982, HT_b: 0.3438, avgrank_b: 35.8353
+Validating on epoch 60
+M: 4474/4474 NDCG_m: 0.2246, HT_m: 0.4113, avgrank_m: 31.4059, val_loss_m: 1.7119
+A: 4474/4474 NDCG_a: 0.2570, HT_a: 0.4638, avgrank_a: 29.7599, val_loss_a: 1.7631
+B: 4474/4474 NDCG_b: 0.2367, HT_b: 0.4032, avgrank_b: 30.6784, val_loss_b: 1.7393
+epoch:60, time taken: 72.642842(s), valid (NDCG@10: 0.2246, HR@10: 0.4113, validLoss: 1.7119), test (NDCG@10: 0.1764, HR@10: 0.3333)
+Epoch 61 trg loss: 3.0264 | LR: 0.002500
+Epoch 62 trg loss: 3.0162 | LR: 0.002500
+Epoch 63 trg loss: 3.0187 | LR: 0.002500
+Epoch 64 trg loss: 3.0182 | LR: 0.002500
+Epoch 65 trg loss: 2.9984 | LR: 0.002500
+Testing on epoch 65...
+M: 4474/4474 NDCG_m: 0.1797, HT_m: 0.3388, avgrank_m: 35.5190
+A: 4474/4474 NDCG_a: 0.2150, HT_a: 0.4066, avgrank_a: 32.9298
+B: 4474/4474 NDCG_b: 0.1993, HT_b: 0.3424, avgrank_b: 35.4993
+Validating on epoch 65
+M: 4474/4474 NDCG_m: 0.2255, HT_m: 0.4075, avgrank_m: 31.3029, val_loss_m: 1.7489
+A: 4474/4474 NDCG_a: 0.2636, HT_a: 0.4649, avgrank_a: 29.5103, val_loss_a: 1.9007
+B: 4474/4474 NDCG_b: 0.2381, HT_b: 0.4048, avgrank_b: 30.5367, val_loss_b: 1.7285
+epoch:65, time taken: 72.603855(s), valid (NDCG@10: 0.2255, HR@10: 0.4075, validLoss: 1.7489), test (NDCG@10: 0.1797, HR@10: 0.3388)
+Epoch 66 trg loss: 2.9918 | LR: 0.002500
+Epoch 67 trg loss: 2.9853 | LR: 0.002500
+Epoch 68 trg loss: 2.9884 | LR: 0.002500
+Epoch 69 trg loss: 2.9859 | LR: 0.002500
+Epoch 70 trg loss: 2.9912 | LR: 0.002500
+Testing on epoch 70...
+M: 4474/4474 NDCG_m: 0.1780, HT_m: 0.3366, avgrank_m: 35.7257
+A: 4474/4474 NDCG_a: 0.1971, HT_a: 0.3802, avgrank_a: 33.6656
+B: 4474/4474 NDCG_b: 0.1971, HT_b: 0.3364, avgrank_b: 35.6591
+Validating on epoch 70
+M: 4474/4474 NDCG_m: 0.2245, HT_m: 0.4104, avgrank_m: 31.5787, val_loss_m: 1.5915
+A: 4474/4474 NDCG_a: 0.2486, HT_a: 0.4526, avgrank_a: 30.0065, val_loss_a: 2.0921
+B: 4474/4474 NDCG_b: 0.2372, HT_b: 0.4005, avgrank_b: 30.6547, val_loss_b: 1.7823
+epoch:70, time taken: 72.711833(s), valid (NDCG@10: 0.2245, HR@10: 0.4104, validLoss: 1.5915), test (NDCG@10: 0.1780, HR@10: 0.3366)
+5 epochs since the last improvement in Validation NDCG/HR
+Epoch 71 trg loss: 2.9954 | LR: 0.002500
+Epoch 72 trg loss: 2.9954 | LR: 0.002500
+Epoch 73 trg loss: 2.9827 | LR: 0.002500
+Epoch 74 trg loss: 2.9755 | LR: 0.002500
+Epoch 75 trg loss: 2.9696 | LR: 0.002500
+Testing on epoch 75...
+M: 4474/4474 NDCG_m: 0.1784, HT_m: 0.3346, avgrank_m: 35.5545
+A: 4474/4474 NDCG_a: 0.2112, HT_a: 0.4113, avgrank_a: 32.8243
+B: 4474/4474 NDCG_b: 0.1970, HT_b: 0.3386, avgrank_b: 35.5360
+Validating on epoch 75
+M: 4474/4474 NDCG_m: 0.2225, HT_m: 0.4075, avgrank_m: 31.1473, val_loss_m: 1.6961
+A: 4474/4474 NDCG_a: 0.2589, HT_a: 0.4631, avgrank_a: 29.8122, val_loss_a: 2.1201
+B: 4474/4474 NDCG_b: 0.2396, HT_b: 0.4081, avgrank_b: 30.4738, val_loss_b: 1.8968
+epoch:75, time taken: 72.600608(s), valid (NDCG@10: 0.2225, HR@10: 0.4075, validLoss: 1.6961), test (NDCG@10: 0.1784, HR@10: 0.3346)
+10 epochs since the last improvement in Validation NDCG/HR
+Epoch 76 trg loss: 2.9662 | LR: 0.002500
+Epoch 77 trg loss: 2.9715 | LR: 0.002500
+Epoch 78 trg loss: 2.9886 | LR: 0.002500
+Epoch 79 trg loss: 2.9701 | LR: 0.002500
+Epoch 80 trg loss: 2.9817 | LR: 0.002500
+Testing on epoch 80...
+M: 4474/4474 NDCG_m: 0.1797, HT_m: 0.3413, avgrank_m: 35.3552
+A: 4474/4474 NDCG_a: 0.1915, HT_a: 0.3905, avgrank_a: 33.7416
+B: 4474/4474 NDCG_b: 0.1970, HT_b: 0.3375, avgrank_b: 35.6551
+Validating on epoch 80
+M: 4474/4474 NDCG_m: 0.2261, HT_m: 0.4126, avgrank_m: 31.1439, val_loss_m: 1.8167
+A: 4474/4474 NDCG_a: 0.2432, HT_a: 0.4504, avgrank_a: 30.3610, val_loss_a: 2.0582
+B: 4474/4474 NDCG_b: 0.2360, HT_b: 0.4034, avgrank_b: 30.6415, val_loss_b: 1.8719
+epoch:80, time taken: 72.660601(s), valid (NDCG@10: 0.2261, HR@10: 0.4126, validLoss: 1.8167), test (NDCG@10: 0.1797, HR@10: 0.3413)
+Epoch 81 trg loss: 2.9758 | LR: 0.002500
+Epoch 82 trg loss: 2.9566 | LR: 0.002500
+Epoch 83 trg loss: 2.9422 | LR: 0.002500
+Epoch 84 trg loss: 2.9437 | LR: 0.002500
+Epoch 85 trg loss: 2.9533 | LR: 0.002500
+Testing on epoch 85...
+M: 4474/4474 NDCG_m: 0.1812, HT_m: 0.3409, avgrank_m: 35.6732
+A: 4474/4474 NDCG_a: 0.2143, HT_a: 0.4012, avgrank_a: 33.0831
+B: 4474/4474 NDCG_b: 0.1969, HT_b: 0.3395, avgrank_b: 35.5548
+Validating on epoch 85
+M: 4474/4474 NDCG_m: 0.2238, HT_m: 0.4081, avgrank_m: 31.3538, val_loss_m: 1.7661
+A: 4474/4474 NDCG_a: 0.2615, HT_a: 0.4638, avgrank_a: 30.0183, val_loss_a: 2.1740
+B: 4474/4474 NDCG_b: 0.2364, HT_b: 0.3965, avgrank_b: 30.8301, val_loss_b: 1.8129
+epoch:85, time taken: 72.637054(s), valid (NDCG@10: 0.2238, HR@10: 0.4081, validLoss: 1.7661), test (NDCG@10: 0.1812, HR@10: 0.3409)
+5 epochs since the last improvement in Validation NDCG/HR
+Epoch 86 trg loss: 2.9438 | LR: 0.002500
+Epoch 87 trg loss: 2.9345 | LR: 0.002500
+Epoch 88 trg loss: 2.9318 | LR: 0.002500
+Epoch 89 trg loss: 2.9352 | LR: 0.002500
+Epoch 90 trg loss: 2.9333 | LR: 0.002500
+Testing on epoch 90...
+M: 4474/4474 NDCG_m: 0.1758, HT_m: 0.3272, avgrank_m: 36.3963
+A: 4474/4474 NDCG_a: 0.2139, HT_a: 0.4108, avgrank_a: 32.9061
+B: 4474/4474 NDCG_b: 0.1952, HT_b: 0.3324, avgrank_b: 35.5277
+Validating on epoch 90
+M: 4474/4474 NDCG_m: 0.2260, HT_m: 0.4039, avgrank_m: 31.5653, val_loss_m: 1.9549
+A: 4474/4474 NDCG_a: 0.2593, HT_a: 0.4660, avgrank_a: 29.5648, val_loss_a: 2.1437
+B: 4474/4474 NDCG_b: 0.2378, HT_b: 0.4025, avgrank_b: 30.6473, val_loss_b: 1.9447
+epoch:90, time taken: 72.800227(s), valid (NDCG@10: 0.2260, HR@10: 0.4039, validLoss: 1.9549), test (NDCG@10: 0.1758, HR@10: 0.3272)
+10 epochs since the last improvement in Validation NDCG/HR
+Epoch 91 trg loss: 2.9313 | LR: 0.002500
+Epoch 92 trg loss: 2.9288 | LR: 0.002500
+Epoch 93 trg loss: 2.9263 | LR: 0.002500
+Epoch 94 trg loss: 2.9280 | LR: 0.002500
+Epoch 95 trg loss: 2.9333 | LR: 0.002500
+Testing on epoch 95...
+M: 4474/4474 NDCG_m: 0.1792, HT_m: 0.3368, avgrank_m: 35.2054
+A: 4474/4474 NDCG_a: 0.2082, HT_a: 0.4128, avgrank_a: 32.5472
+B: 4474/4474 NDCG_b: 0.1955, HT_b: 0.3348, avgrank_b: 35.7005
+Validating on epoch 95
+M: 4474/4474 NDCG_m: 0.2316, HT_m: 0.4169, avgrank_m: 31.1187, val_loss_m: 1.9851
+A: 4474/4474 NDCG_a: 0.2561, HT_a: 0.4705, avgrank_a: 29.4810, val_loss_a: 2.3555
+B: 4474/4474 NDCG_b: 0.2359, HT_b: 0.3965, avgrank_b: 30.7716, val_loss_b: 1.9494
+epoch:95, time taken: 72.807209(s), valid (NDCG@10: 0.2316, HR@10: 0.4169, validLoss: 1.9851), test (NDCG@10: 0.1792, HR@10: 0.3368)
+Epoch 96 trg loss: 2.9401 | LR: 0.002500
+Epoch 97 trg loss: 2.9295 | LR: 0.002500
+Epoch 98 trg loss: 2.9301 | LR: 0.002500
+Epoch 99 trg loss: 2.9128 | LR: 0.002500
+Epoch 100 trg loss: 2.9160 | LR: 0.002500
+Testing on epoch 100...
+M: 4474/4474 NDCG_m: 0.1782, HT_m: 0.3355, avgrank_m: 35.4573
+A: 4474/4474 NDCG_a: 0.1998, HT_a: 0.3905, avgrank_a: 33.4247
+B: 4474/4474 NDCG_b: 0.1994, HT_b: 0.3433, avgrank_b: 35.2720
+Validating on epoch 100
+M: 4474/4474 NDCG_m: 0.2254, HT_m: 0.4052, avgrank_m: 31.2975, val_loss_m: 1.8853
+A: 4474/4474 NDCG_a: 0.2521, HT_a: 0.4636, avgrank_a: 29.9334, val_loss_a: 2.3605
+B: 4474/4474 NDCG_b: 0.2369, HT_b: 0.4028, avgrank_b: 30.5939, val_loss_b: 1.9496
+epoch:100, time taken: 72.800971(s), valid (NDCG@10: 0.2254, HR@10: 0.4052, validLoss: 1.8853), test (NDCG@10: 0.1782, HR@10: 0.3355)
+5 epochs since the last improvement in Validation NDCG/HR
+Epoch 101 trg loss: 2.9090 | LR: 0.002500
+Epoch 102 trg loss: 2.9129 | LR: 0.002500
+Epoch 103 trg loss: 2.9255 | LR: 0.002500
+Epoch 104 trg loss: 2.9357 | LR: 0.002500
+Epoch 105 trg loss: 2.9159 | LR: 0Epoch 105 trg loss: 2.9159 | LR: 0.002500
+Testing on epoch 105...
+M: 4474/4474 NDCG_m: 0.1805, HT_m: 0.3382, avgrank_m: 35.7740
+A: 4474/4474 NDCG_a: 0.2049, HT_a: 0.3936, avgrank_a: 33.2300
+B: 4474/4474 NDCG_b: 0.1911, HT_b: 0.3350, avgrank_b: 35.5995
+Validating on epoch 105
+M: 4474/4474 NDCG_m: 0.2296, HT_m: 0.4117, avgrank_m: 31.2640, val_loss_m: 1.9711
+A: 4474/4474 NDCG_a: 0.2498, HT_a: 0.4602, avgrank_a: 29.7964, val_loss_a: 2.2756
+B: 4474/4474 NDCG_b: 0.2332, HT_b: 0.3932, avgrank_b: 31.0089, val_loss_b: 2.0786
+epoch:105, time taken: 72.730762(s), valid (NDCG@10: 0.2296, HR@10: 0.4117, validLoss: 1.9711), test (NDCG@10: 0.1805, HR@10: 0.3382)
+10 epochs since the last improvement in Validation NDCG/HR
+Epoch 106 trg loss: 2.9128 | LR: 0.002500
+Epoch 107 trg loss: 2.9096 | LR: 0.002500
+Epoch 108 trg loss: 2.9228 | LR: 0.002500
+Epoch 109 trg loss: 2.9158 | LR: 0.002500
+Epoch 110 trg loss: 2.9283 | LR: 0.002500
+Testing on epoch 110...
+M: 4474/4474 NDCG_m: 0.1808, HT_m: 0.3353, avgrank_m: 35.6835
+A: 4474/4474 NDCG_a: 0.2012, HT_a: 0.3947, avgrank_a: 33.6759
+B: 4474/4474 NDCG_b: 0.1931, HT_b: 0.3371, avgrank_b: Validating on epoch 110
+
+30.6938, val_loss_b: 1.9818
+
+ in Validation NDCG/HR
+
+: 2.9034 | LR: 0.002500
+
+: 2.9119 | LR: 0.002500
+
+: 2.9060 | LR: 0.002500
+
+: 2.9231 | LR: 0.002500
+Epoch 102 trg loss: 2.9129 | LR: 0.002500
+Epoch 103 trg loss: 2.9255 | LR: 0.002500
+Epoch 104 trg loss: 2.9357 | LR: 0.002500
+Epoch 105 trg loss: 2.9159 | LR: 0.002500
+Testing on epoch 105...
+M: 4474/4474 NDCG_m: 0.1805, HT_m: 0.3382, avgrank_m: 35.7740
+A: 4474/4474 NDCG_a: 0.2049, HT_a: 0.3936, avgrank_a: 33.2300
+B: 4474/4474 NDCG_b: 0.1911, HT_b: 0.3350, avgrank_b: 35.5995
+Validating on epoch 105
+M: 4474/4474 NDCG_m: 0.2296, HT_m: 0.4117, avgrank_m: 31.2640, val_loss_m: 1.9711
+A: 4474/4474 NDCG_a: 0.2498, HT_a: 0.4602, avgrank_a: 29.7964, val_loss_a: 2.2756
+B: 4474/4474 NDCG_b: 0.2332, HT_b: 0.3932, avgrank_b: 31.0089, val_loss_b: 2.0786
+epoch:105, time taken: 72.730762(s), valid (NDCG@10: 0.2296, HR@10: 0.4117, validLoss: 1.9711), test (NDCG@10: 0.1805, HR@10: 0.3382)
+10 epochs since the last improvement in Validation NDCG/HR
+Epoch 106 trg loss: 2.9128 | LR: 0.002500
+Epoch 107 trg loss: 2.9096 | LR: 0.002500
+Epoch 108 trg loss: 2.9228 | LR: 0.002500
+Epoch 109 trg loss: 2.9158 | LR: 0.002500
+Epoch 110 trg loss: 2.9283 | LR: 0.002500
+Testing on epoch 110...
+M: 4474/4474 NDCG_m: 0.1808, HT_m: 0.3353, avgrank_m: 35.6835
+A: 4474/4474 NDCG_a: 0.2012, HT_a: 0.3947, avgrank_a: 33.6759
+B: 4474/4474 NDCG_b: 0.1931, HT_b: 0.3371, avgrank_b: 35.5186
+Validating on epoch 110
+M: 4474/4474 NDCG_m: 0.2273, HT_m: 0.4119, avgrank_m: 31.3943, val_loss_m: 1.9590
+A: 4474/4474 NDCG_a: 0.2564, HT_a: 0.4620, avgrank_a: 30.1924, val_loss_a: 2.2586
+B: 4474/4474 NDCG_b: 0.2360, HT_b: 0.4041, avgrank_b: 30.6938, val_loss_b: 1.9818
+epoch:110, time taken: 72.672732(s), valid (NDCG@10: 0.2273, HR@10: 0.4119, validLoss: 1.9590), test (NDCG@10: 0.1808, HR@10: 0.3353)
+15 epochs since the last improvement in Validation NDCG/HR
+Epoch 111 trg loss: 2.9034 | LR: 0.002500
+Epoch 112 trg loss: 2.9119 | LR: 0.002500
+Epoch 113 trg loss: 2.9060 | LR: 0.002500
+Epoch 114 trg loss: 2.9231 | LR: 0.002500
+Epoch 115 trg loss: 2.9121 | LR: 0.002500
+Testing on epoch 115...
+M: 4474/4474 NDCG_m: 0.1822, HT_m: 0.3429, avgrank_m: 35.1560
+A: 4474/4474 NDCG_a: 0.2206, HT_a: 0.4186, avgrank_a: 32.7204
+B: 4474/4474 NDCG_b: 0.1897, HT_b: 0.3321, avgrank_b: 35.4660
+Validating on epoch 115
+M: 4474/4474 NDCG_m: 0.2269, HT_m: 0.4135, avgrank_m: 31.2941, val_loss_m: 2.0138
+A: 4474/4474 NDCG_a: 0.2629, HT_a: 0.4696, avgrank_a: 29.9450, val_loss_a: 2.2002
+B: 4474/4474 NDCG_b: 0.2322, HT_b: 0.3979, avgrank_b: 30.9770, val_loss_b: 2.1382
+epoch:115, time taken: 72.626937(s), valid (NDCG@10: 0.2269, HR@10: 0.4135, validLoss: 2.0138), test (NDCG@10: 0.1822, HR@10: 0.3429)
+20 epochs since the last improvement in Validation NDCG/HR
+Epoch 116 trg loss: 2.9085 | LR: 0.002500
+Epoch 117 trg loss: 2.9067 | LR: 0.002500
+Epoch 118 trg loss: 2.8941 | LR: 0.002500
+Epoch 119 trg loss: 2.8872 | LR: 0.002500
+Epoch 120 trg loss: 2.9113 | LR: 0.002500
+Testing on epoch 120...
+M: 4474/4474 NDCG_m: 0.1791, HT_m: 0.3357, avgrank_m: 36.8970
+A: 4474/4474 NDCG_a: 0.1930, HT_a: 0.3811, avgrank_a: 34.3753
+B: 4474/4474 NDCG_b: 0.1875, HT_b: 0.3236, avgrank_b: 35.7418
+Validating on epoch 120
+M: 4474/4474 NDCG_m: 0.2259, HT_m: 0.3996, avgrank_m: 32.4012, val_loss_m: 1.9901
+A: 4474/4474 NDCG_a: 0.2392, HT_a: 0.4430, avgrank_a: 30.8174, val_loss_a: 2.3928
+B: 4474/4474 NDCG_b: 0.2286, HT_b: 0.3916, avgrank_b: 30.9879, val_loss_b: 2.0650
+epoch:120, time taken: 72.522516(s), valid (NDCG@10: 0.2259, HR@10: 0.3996, validLoss: 1.9901), test (NDCG@10: 0.1791, HR@10: 0.3357)
+25 epochs since the last improvement in Validation NDCG/HR
+Epoch 121 trg loss: 2.9145 | LR: 0.002500
+Epoch 122 trg loss: 2.9039 | LR: 0.002500
+Epoch 123 trg loss: 2.8854 | LR: 0.002500
+Epoch 124 trg loss: 2.8834 | LR: 0.002500
+Epoch 125 trg loss: 2.8604 | LR: 0.002500
+Testing on epoch 125...
+M: 4474/4474 NDCG_m: 0.1820, HT_m: 0.3411, avgrank_m: 36.2825
+A: 4474/4474 NDCG_a: 0.2121, HT_a: 0.4135, avgrank_a: 32.3733
+B: 4474/4474 NDCG_b: 0.1969, HT_b: 0.3388, avgrank_b: 35.3581
+Validating on epoch 125
+M: 4474/4474 NDCG_m: 0.2294, HT_m: 0.4093, avgrank_m: 31.5796, val_loss_m: 2.0800
+A: 4474/4474 NDCG_a: 0.2618, HT_a: 0.4752, avgrank_a: 29.2231, val_loss_a: 2.6535
+B: 4474/4474 NDCG_b: 0.2350, HT_b: 0.3999, avgrank_b: 30.7758, val_loss_b: 2.1214
+epoch:125, time taken: 72.619961(s), valid (NDCG@10: 0.2294, HR@10: 0.4093, validLoss: 2.0800), test (NDCG@10: 0.1820, HR@10: 0.3411)
+30 epochs since the last improvement in Validation NDCG/HR
+Epoch 126 trg loss: 2.8688 | LR: 0.001250
+Epoch 127 trg loss: 2.8515 | LR: 0.001250
+Epoch 128 trg loss: 2.8549 | LR: 0.001250
+Epoch 129 trg loss: 2.8438 | LR: 0.001250
+Epoch 130 trg loss: 2.8440 | LR: 0.001250
+Testing on epoch 130...
+M: 4474/4474 NDCG_m: 0.1868, HT_m: 0.3464, avgrank_m: 35.7380
+A: 4474/4474 NDCG_a: 0.2157, HT_a: 0.4209, avgrank_a: 32.7128
+B: 4474/4474 NDCG_b: 0.1979, HT_b: 0.3422, avgrank_b: 35.2488
+Validating on epoch 130
+M: 4474/4474 NDCG_m: 0.2299, HT_m: 0.4093, avgrank_m: 31.4493, val_loss_m: 2.0784
+A: 4474/4474 NDCG_a: 0.2635, HT_a: 0.4810, avgrank_a: 29.6985, val_loss_a: 2.5033
+B: 4474/4474 NDCG_b: 0.2361, HT_b: 0.3974, avgrank_b: 30.7845, val_loss_b: 2.1578
+epoch:130, time taken: 72.645295(s), valid (NDCG@10: 0.2299, HR@10: 0.4093, validLoss: 2.0784), test (NDCG@10: 0.1868, HR@10: 0.3464)
+35 epochs since the last improvement in Validation NDCG/HR
+Epoch 131 trg loss: 2.8354 | LR: 0.001250
+Epoch 132 trg loss: 2.8437 | LR: 0.001250
+Epoch 133 trg loss: 2.8336 | LR: 0.001250
+Epoch 134 trg loss: 2.8328 | LR: 0.001250
+Epoch 135 trg loss: 2.8295 | LR: 0.001250
+Testing on epoch 135...
+M: 4474/4474 NDCG_m: 0.1872, HT_m: 0.3476, avgrank_m: 35.4533
+A: 4474/4474 NDCG_a: 0.2221, HT_a: 0.4231, avgrank_a: 32.2564
+B: 4474/4474 NDCG_b: 0.1945, HT_b: 0.3337, avgrank_b: 35.3431
+Validating on epoch 135
+M: 4474/4474 NDCG_m: 0.2325, HT_m: 0.4133, avgrank_m: 31.4763, val_loss_m: 2.1381
+A: 4474/4474 NDCG_a: 0.2675, HT_a: 0.4801, avgrank_a: 29.4276, val_loss_a: 2.5052
+B: 4474/4474 NDCG_b: 0.2384, HT_b: 0.4028, avgrank_b: 30.7857, val_loss_b: 2.1562
+epoch:135, time taken: 72.694007(s), valid (NDCG@10: 0.2325, HR@10: 0.4133, validLoss: 2.1381), test (NDCG@10: 0.1872, HR@10: 0.3476)
+Epoch 136 trg loss: 2.8305 | LR: 0.001250
+Epoch 137 trg loss: 2.8257 | LR: 0.001250
+Epoch 138 trg loss: 2.8217 | LR: 0.001250
+Epoch 139 trg loss: 2.8220 | LR: 0.001250
+Epoch 140 trg loss: 2.8139 | LR: 0.001250
+Testing on epoch 140...
+M: 4474/4474 NDCG_m: 0.1843, HT_m: 0.3400, avgrank_m: 36.2074
+A: 4474/4474 NDCG_a: 0.2208, HT_a: 0.4260, avgrank_a: 32.4160
+B: 4474/4474 NDCG_b: 0.1948, HT_b: 0.3368, avgrank_b: 35.3791
+Validating on epoch 140
+M: 4474/4474 NDCG_m: 0.2305, HT_m: 0.4090, avgrank_m: 31.7532, val_loss_m: 2.1439
+A: 4474/4474 NDCG_a: 0.2693, HT_a: 0.4850, avgrank_a: 29.4093, val_loss_a: 2.6059
+B: 4474/4474 NDCG_b: 0.2321, HT_b: 0.3929, avgrank_b: 30.8228, val_loss_b: 2.1779
+epoch:140, time taken: 72.700470(s), valid (NDCG@10: 0.2305, HR@10: 0.4090, validLoss: 2.1439), test (NDCG@10: 0.1843, HR@10: 0.3400)
+5 epochs since the last improvement in Validation NDCG/HR
+Epoch 141 trg loss: 2.8160 | LR: 0.001250
+Epoch 142 trg loss: 2.8130 | LR: 0.001250
+Epoch 143 trg loss: 2.8081 | LR: 0.001250
+Epoch 144 trg loss: 2.8107 | LR: 0.001250
+Epoch 145 trg loss: 2.8113 | LR: 0.001250
+Testing on epoch 145...
+M: 4474/4474 NDCG_m: 0.1865, HT_m: 0.3473, avgrank_m: 35.7092
+A: 4474/4474 NDCG_a: 0.2308, HT_a: 0.4354, avgrank_a: 32.0049
+B: 4474/4474 NDCG_b: 0.1984, HT_b: 0.3359, avgrank_b: 35.4459
+Validating on epoch 145
+M: 4474/4474 NDCG_m: 0.2332, HT_m: 0.4124, avgrank_m: 31.6328, val_loss_m: 2.1447
+A: 4474/4474 NDCG_a: 0.2737, HT_a: 0.4904, avgrank_a: 29.2351, val_loss_a: 2.7288
+B: 4474/4474 NDCG_b: 0.2367, HT_b: 0.4001, avgrank_b: 30.8100, val_loss_b: 2.1526
+epoch:145, time taken: 72.603631(s), valid (NDCG@10: 0.2332, HR@10: 0.4124, validLoss: 2.1447), test (NDCG@10: 0.1865, HR@10: 0.3473)
+Epoch 146 trg loss: 2.8017 | LR: 0.001250
+Epoch 147 trg loss: 2.7976 | LR: 0.001250
+Epoch 148 trg loss: 2.8101 | LR: 0.001250
+Epoch 149 trg loss: 2.7990 | LR: 0.001250
+Epoch 150 trg loss: 2.7957 | LR: 0.001250
+Testing on epoch 150...
+M: 4474/4474 NDCG_m: 0.1820, HT_m: 0.3373, avgrank_m: 35.9101
+A: 4474/4474 NDCG_a: 0.2152, HT_a: 0.4195, avgrank_a: 32.5657
+B: 4474/4474 NDCG_b: 0.1929, HT_b: 0.3310, avgrank_b: 35.4890
+Validating on epoch 150
+M: 4474/4474 NDCG_m: 0.2307, HT_m: 0.4072, avgrank_m: 31.7501, val_loss_m: 2.1951
+A: 4474/4474 NDCG_a: 0.2638, HT_a: 0.4774, avgrank_a: 29.4868, val_loss_a: 2.7744
+B: 4474/4474 NDCG_b: 0.2372, HT_b: 0.3985, avgrank_b: 30.7861, val_loss_b: 2.2031
+epoch:150, time taken: 72.540239(s), valid (NDCG@10: 0.2307, HR@10: 0.4072, validLoss: 2.1951), test (NDCG@10: 0.1820, HR@10: 0.3373)
+5 epochs since the last improvement in Validation NDCG/HR
+Epoch 151 trg loss: 2.7978 | LR: 0.001250
+Epoch 152 trg loss: 2.7918 | LR: 0.001250
+Epoch 153 trg loss: 2.7983 | LR: 0.001250
+Epoch 154 trg loss: 2.7916 | LR: 0.001250
+Epoch 155 trg loss: 2.7891 | LR: 0.001250
+Testing on epoch 155...
+M: 4474/4474 NDCG_m: 0.1867, HT_m: 0.3451, avgrank_m: 35.2269
+A: 4474/4474 NDCG_a: 0.2253, HT_a: 0.4291, avgrank_a: 32.1658
+B: 4474/4474 NDCG_b: 0.1944, HT_b: 0.3337, avgrank_b: 35.5507
+Validating on epoch 155
+M: 4474/4474 NDCG_m: 0.2330, HT_m: 0.4144, avgrank_m: 31.4238, val_loss_m: 2.2527
+A: 4474/4474 NDCG_a: 0.2704, HT_a: 0.4826, avgrank_a: 29.4888, val_loss_a: 2.7491
+B: 4474/4474 NDCG_b: 0.2346, HT_b: 0.3970, avgrank_b: 30.8444, val_loss_b: 2.2615
+epoch:155, time taken: 72.638229(s), valid (NDCG@10: 0.2330, HR@10: 0.4144, validLoss: 2.2527), test (NDCG@10: 0.1867, HR@10: 0.3451)
+10 epochs since the last improvement in Validation NDCG/HR
+Epoch 156 trg loss: 2.7798 | LR: 0.001250
+Epoch 157 trg loss: 2.7986 | LR: 0.001250
+Epoch 158 trg loss: 2.8061 | LR: 0.001250
+Epoch 159 trg loss: 2.7934 | LR: 0.001250
+Epoch 160 trg loss: 2.7805 | LR: 0.001250
+Testing on epoch 160...
+M: 4474/4474 NDCG_m: 0.1834, HT_m: 0.3404, avgrank_m: 35.9437
+A: 4474/4474 NDCG_a: 0.2085, HT_a: 0.4037, avgrank_a: 32.9198
+B: 4474/4474 NDCG_b: 0.1953, HT_b: 0.3375, avgrank_b: 35.5190
+Validating on epoch 160
+M: 4474/4474 NDCG_m: 0.2311, HT_m: 0.4142, avgrank_m: 31.6806, val_loss_m: 2.1894
+A: 4474/4474 NDCG_a: 0.2583, HT_a: 0.4716, avgrank_a: 29.8105, val_loss_a: 2.7500
+B: 4474/4474 NDCG_b: 0.2386, HT_b: 0.4075, avgrank_b: 30.7126, val_loss_b: 2.2160
+epoch:160, time taken: 72.754123(s), valid (NDCG@10: 0.2311, HR@10: 0.4142, validLoss: 2.1894), test (NDCG@10: 0.1834, HR@10: 0.3404)
+15 epochs since the last improvement in Validation NDCG/HR
+Epoch 161 trg loss: 2.7754 | LR: 0.001250
+Epoch 162 trg loss: 2.7820 | LR: 0.001250
+Epoch 163 trg loss: 2.7676 | LR: 0.001250
+Epoch 164 trg loss: 2.7636 | LR: 0.001250
+Epoch 165 trg loss: 2.7653 | LR: 0.001250
+Testing on epoch 165...
+M: 4474/4474 NDCG_m: 0.1877, HT_m: 0.3451, avgrank_m: 35.7682
+A: 4474/4474 NDCG_a: 0.2223, HT_a: 0.4267, avgrank_a: 32.2387
+B: 4474/4474 NDCG_b: 0.1955, HT_b: 0.3357, avgrank_b: 35.3719
+Validating on epoch 165
+M: 4474/4474 NDCG_m: 0.2361, HT_m: 0.4233, avgrank_m: 31.2595, val_loss_m: 2.2150
+A: 4474/4474 NDCG_a: 0.2715, HT_a: 0.4797, avgrank_a: 29.4370, val_loss_a: 2.8617
+B: 4474/4474 NDCG_b: 0.2375, HT_b: 0.3979, avgrank_b: 30.7501, val_loss_b: 2.2473
+epoch:165, time taken: 73.023460(s), valid (NDCG@10: 0.2361, HR@10: 0.4233, validLoss: 2.2150), test (NDCG@10: 0.1877, HR@10: 0.3451)
+Epoch 166 trg loss: 2.7553 | LR: 0.001250
+Epoch 167 trg loss: 2.7487 | LR: 0.001250
+Epoch 168 trg loss: 2.7521 | LR: 0.001250
+Epoch 169 trg loss: 2.7548 | LR: 0.001250
+Epoch 170 trg loss: 2.7615 | LR: 0.001250
+Testing on epoch 170...
+M: 4474/4474 NDCG_m: 0.1843, HT_m: 0.3350, avgrank_m: 36.7653
