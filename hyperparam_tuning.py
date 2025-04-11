@@ -7,7 +7,7 @@ import numpy as np
 
 # Define hyperparameter grid search space
 hidden_units = [32, 64, 128] 
-lrs = [0.01, 0.001, 0.0001] # Dont try 0.01
+lrs = [0.001, 0.0005, 0.0001] # Dont try 0.01
 dropout_rates = [0.1, 0.2, 0.3, 0.4] # Sometimes even up to 0.9
 weight_decays = [1e-4, 1e-3, 1e-2]
 
@@ -40,11 +40,14 @@ dl = get_dataloader(user_train_m, user_train_a, user_train_b, n_users, n_items_m
 print("Data loaded successfully!\n")
 
 # Tuning Loop
-best_val_metrics = [-1,-1,999]
+best_m = [-1,-1,999]
+best_a = [-1,-1,999]
+best_b = [-1,-1,999]
 best_params = {}
-num_tuning_epochs = 30
+num_tuning_epochs = 100
+num_warmup_epochs = 50
 
-with open("best_params_30epochs.txt", "w") as f:
+with open("best_params_100epochs.txt", "w") as f:
     for hidden, lr, dropout, weight_decay in itertools.product(hidden_units, lrs, dropout_rates, weight_decays):
         # Update args values dynamically 
         args.hidden_units = hidden
@@ -54,21 +57,28 @@ with open("best_params_30epochs.txt", "w") as f:
 
         # LOAD MODEL
         trainer = Trainer(args)
-
+        print(f"Tuning for: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}")
         for epoch in range(num_tuning_epochs):
             epoch_train_loss = trainer.run_epoch(epoch)
-
-        val_metrics = trainer.run_valid(30)
-        print(f"Validation: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}")
-        f.write(f"Validation: hidden={hidden}, lr={lr}, dropout={dropout}, weight_decay={weight_decay}; {val_metrics}\n")
-
-        # Save best hyperparameters
-        ## TODO: Change to [0] and reverse < if want to do selection through NDCG !
-        if val_metrics[2] < best_val_metrics[2]:
-            best_val_metrics = val_metrics
-            best_params = {"hidden_units": hidden, "lr": lr, "dropout_rate": dropout, "weight_decay": weight_decay}
-            f.write(f"Best so far: {best_params}\n {val_metrics} \n")
-            print(f">>> This itr is the best so far with these metrics {val_metrics} <<<\n")
-    f.write(f"Best OVERALL: {best_params}\n {best_val_metrics} \n")
-
-print("Best hyperparams:", best_params, best_val_metrics)
+            if epoch > num_warmup_epochs and epoch%10 == 0: # Epoch 50 onwards 
+                m_valid, a_valid, b_valid = trainer.run_valid(epoch)
+                print(f"Epoch {epoch}:")
+                print(f"M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f})\n")
+                print(f"A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f})\n")
+                print(f"B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f})\n")
+                f.write(f"M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f})\n")
+                f.write(f"A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f})\n")
+                f.write(f"B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f})\n")
+                if m_valid[2] < best_m[2]: # For now we do just on m
+                    best_m = m_valid
+                    #best_params = {"hidden_units": hidden, "lr": lr, "dropout_rate": dropout, "weight_decay": weight_decay}
+                    f.write(f"===== ABOVE IS BEST SO FAR ====\n")
+                    print(f"===== ABOVE IS BEST SO FAR ====\n")
+                                    
+    f.write(f"Best OVERALL: {best_params}\n")
+    print(f"M:({float(best_m[0]):.5f}, {best_m[1]:.5f}, {best_m[2]:.5f})\n")
+    print(f"A:({float(best_a[0]):.5f}, {best_a[1]:.5f}, {best_a[2]:.5f})\n")
+    print(f"B:({float(best_b[0]):.5f}, {best_b[1]:.5f}, {best_b[2]:.5f})\n")
+    f.write(f"M:({float(best_m[0]):.5f}, {best_m[1]:.5f}, {best_m[2]:.5f})\n")
+    f.write(f"A:({float(best_a[0]):.5f}, {best_a[1]:.5f}, {best_a[2]:.5f})\n")
+    f.write(f"B:({float(best_b[0]):.5f}, {best_b[1]:.5f}, {best_b[2]:.5f})\n")
