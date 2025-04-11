@@ -119,9 +119,9 @@ if __name__ == '__main__':
             # NEW SCHEDULER HERE!
             trainer.scheduler.step(m_valid[0])  # if you're monitoring NDCG
             ## Log results in log.txt
-            f.write(str(epoch) + ' M:' + str(m_valid) + ' ' + str(m_test) + '\n')
-            f.write(str(epoch) + ' A:' + str(a_valid) + ' ' + str(a_test) + '\n')
-            f.write(str(epoch) + ' B:' + str(b_valid) + ' ' + str(b_test) + '\n')
+            f.write(f"{epoch} M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f}) ({float(m_test[0]):.5f}, {m_test[1]:.5f})\n")
+            f.write(f"{epoch} A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f}) ({float(a_test[0]):.5f}, {a_test[1]:.5f})\n")
+            f.write(f"{epoch} B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f}) ({float(b_test[0]):.5f}, {b_test[1]:.5f})\n")
             f.flush()
 
             ## Activate early stoppage if patience is exceeded
