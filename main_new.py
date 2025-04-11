@@ -4,7 +4,7 @@ import torch
 import argparse
 from torch.utils.data import DataLoader
 import random
-from numpy import np
+import numpy as np
 
 from model import SASRec, init_weights
 from utils import *
