@@ -25,6 +25,8 @@ parser.add_argument('--batch_size', default=128, type=int)
 parser.add_argument('--num_blocks', default=2, type=int)
 parser.add_argument('--num_heads', default=1, type=int)
 parser.add_argument('--l2_emb', default=0.0, type=float)
+parser.add_argument('--seed', default=1111, type=int)
+
 args = parser.parse_args()
 print("Hyperparameter tuning")
 
