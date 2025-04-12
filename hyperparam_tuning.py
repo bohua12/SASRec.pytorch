@@ -11,7 +11,7 @@ import time
 
 
 # Define hyperparameter grid search space
-hidden_units = [64] 
+hidden_units = [128] 
 lrs = [0.001, 0.0005, 0.0001] # Dont try 0.01
 dropout_rates = [0.1, 0.2, 0.3, 0.4] # Sometimes even up to 0.9
 weight_decays = [1e-4, 1e-3, 1e-2]
@@ -48,7 +48,7 @@ os.environ['PYTHONHASHSEED'] = str(args.seed)
 itr = 1
 t_start = 0
 t_end = 0
-with open("tuning_2.txt", "w") as f:
+with open("tuning_1.txt", "w") as f:
     for hidden, lr, dropout, weight_decay in itertools.product(hidden_units, lrs, dropout_rates, weight_decays):
         start_time = time.time()  # Start timing the iteration
 
