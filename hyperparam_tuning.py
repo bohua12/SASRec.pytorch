@@ -48,7 +48,7 @@ os.environ['PYTHONHASHSEED'] = str(args.seed)
 itr = 1
 t_start = 0
 t_end = 0
-with open("tuning_3.txt", "w") as f:
+with open("tuning_2.txt", "w") as f:
     for hidden, lr, dropout, weight_decay in itertools.product(hidden_units, lrs, dropout_rates, weight_decays):
         start_time = time.time()  # Start timing the iteration
 
