@@ -11,7 +11,7 @@ import time
 
 
 # Define hyperparameter grid search space
-hidden_units = [32] 
+hidden_units = [64] 
 lrs = [0.001, 0.0005, 0.0001] # Dont try 0.01
 dropout_rates = [0.1, 0.2, 0.3, 0.4] # Sometimes even up to 0.9
 weight_decays = [1e-4, 1e-3, 1e-2]
