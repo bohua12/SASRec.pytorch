@@ -91,7 +91,7 @@ class Trainer(object):
             loss.backward()
             self.adam_optimizer.step()
             epoch_loss += loss.item()
-        #print(f"Epoch {i} trg loss: {epoch_loss / len(self.dl):.4f} | LR: {current_lr:.6f}")
+        print(f"Epoch {i} trg loss: {epoch_loss / len(self.dl):.4f} | LR: {current_lr:.6f}")
         return epoch_loss
     
     """
