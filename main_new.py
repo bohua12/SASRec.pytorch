@@ -118,7 +118,7 @@ if __name__ == '__main__':
                 if best_NDCG < avg_NDCG:
                     best_NDCG = avg_NDCG
                     f.write("[BEST Avg NDCG]")
-                    print("Best avg NDCG So far!")
+                    print(" [Best avg NDCG So far!]")
                 f.write("\n")
                 epochs_since_improvement = 0
             else:
@@ -127,12 +127,13 @@ if __name__ == '__main__':
                 f.write(f"{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR\n")
 
             # NEW SCHEDULER HERE!
-            trainer.scheduler.step(m_valid[0])  # if you're monitoring NDCG
+            trainer.scheduler.step(avg_NDCG)  # if you're monitoring NDCG
             ## Log results in log.txt
-            f.write("\n")
             f.write(f"M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f}) ({float(m_test[0]):.5f}, {m_test[1]:.5f})\n")
             f.write(f"A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f}) ({float(a_test[0]):.5f}, {a_test[1]:.5f})\n")
             f.write(f"B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f}) ({float(b_test[0]):.5f}, {b_test[1]:.5f})\n")
+            f.write("\n")
+            print("")
             f.flush()
 
             ## Activate early stoppage if patience is exceeded

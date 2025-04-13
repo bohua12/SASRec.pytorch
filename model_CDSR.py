@@ -162,10 +162,10 @@ class CDSR(torch.nn.Module):
             log_feats = self.encoder_m(seqs, poss)[:, -1] # [:,-1] because we ONLY want to capture the final sequence
             scores = self.lin_m(log_feats)
         elif domain == "a":
-            log_feats = self.encoder_a(seqs, poss)
-            scores = self.lin_a(log_feats)[:, -1] # (batch_size, num_items)
+            log_feats = self.encoder_a(seqs, poss)[:, -1]
+            scores = self.lin_a(log_feats) # (batch_size, num_items)
         else:
-            log_feats = self.encoder_b(seqs, poss)
+            log_feats = self.encoder_b(seqs, poss)[:, -1]
             scores = self.lin_b(log_feats)[:, -1]
 
         return scores[:, item_idx]  # extract only scores for candidate items
