@@ -17,7 +17,7 @@ class Trainer(object):
         self.user_train_a, self.user_valid_a, self.user_test_a,
         self.user_train_b, self.user_valid_b, self.user_test_b,
         self.n_users, self.n_items_m, self.n_items_a, self.n_items_b
-        ] = data_partition("abe", "abe_50_preprocessed.txt", args)
+        ] = data_partition("afk", "afk_50_preprocessed.txt", args)
 
         # Get dataloader for training dataset
         #self.dl = get_dataloader(self.user_train, self.n_users, self.n_items, self.args)
