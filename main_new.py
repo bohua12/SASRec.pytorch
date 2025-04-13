@@ -117,13 +117,14 @@ if __name__ == '__main__':
                 # MODEL SAVING: Next time? torch.save(model.state_dict(), os.path.join(folder, fname))
                 if best_NDCG < avg_NDCG:
                     best_NDCG = avg_NDCG
-                    f.write("[BEST Avg NDCG]")
+                    f.write(" [BEST Avg NDCG]")
                     print(" [Best avg NDCG So far!]")
                 epochs_since_improvement = 0
+                f.write("\n")
             else:
                 epochs_since_improvement += args.verification_frequency
                 print(f"{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR")
-                f.write(f"{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR\n")
+                f.write(f"\n{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR\n")
 
             # NEW SCHEDULER HERE!
             trainer.scheduler.step(avg_NDCG)  # if you're monitoring NDCG
