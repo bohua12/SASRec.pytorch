@@ -166,7 +166,7 @@ class CDSR(torch.nn.Module):
             scores = self.lin_a(log_feats) # (batch_size, num_items)
         else:
             log_feats = self.encoder_b(seqs, poss)[:, -1]
-            scores = self.lin_b(log_feats)[:, -1]
+            scores = self.lin_b(log_feats)
 
         return scores[:, item_idx]  # extract only scores for candidate items
 
