@@ -33,8 +33,8 @@ class Trainer(object):
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.adam_optimizer,
             mode='max',
-            factor=0.5,
-            patience=5,
+            factor=0.3,
+            patience=20,
             verbose=True
         )
 
