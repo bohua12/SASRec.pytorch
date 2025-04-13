@@ -160,7 +160,7 @@ class CDSR(torch.nn.Module):
         seqs, poss = self.generate_input_embedding(seq)
         if domain == "m":
             log_feats = self.encoder_m(seqs, poss)[:, -1] # [:,-1] because we ONLY want to capture the final sequence
-            scores = self.lin_m(log_feats)[:, -1]
+            scores = self.lin_m(log_feats)
         elif domain == "a":
             log_feats = self.encoder_a(seqs, poss)
             scores = self.lin_a(log_feats)[:, -1] # (batch_size, num_items)
