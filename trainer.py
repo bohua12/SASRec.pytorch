@@ -34,7 +34,7 @@ class Trainer(object):
             self.adam_optimizer,
             mode='max',
             factor=0.3,
-            patience=20,
+            patience=10,
             verbose=True
         )
 
