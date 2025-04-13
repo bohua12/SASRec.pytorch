@@ -123,7 +123,7 @@ if __name__ == '__main__':
                 f.write("\n")
             else:
                 epochs_since_improvement += args.verification_frequency
-                print(f"{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR")
+                print(f" {epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR")
                 f.write(f"\n{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR\n")
 
             # NEW SCHEDULER HERE!

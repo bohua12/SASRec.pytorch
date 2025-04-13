@@ -159,14 +159,14 @@ class CDSR(torch.nn.Module):
         item_idx = torch.LongTensor(item_idx).to(self.args.device)
         seqs, poss = self.generate_input_embedding(seq)
         if domain == "m":
-            log_feats = self.encoder_m(seqs, poss)[:, -1] # [:,-1] because we ONLY want to capture the final sequence
-            scores = self.lin_m(log_feats)
+            log_feats = self.encoder_m(seqs, poss) # [:,-1] because we ONLY want to capture the final sequence
+            scores = self.lin_m(log_feats)[:, -1]
         elif domain == "a":
-            log_feats = self.encoder_a(seqs, poss)[:, -1]
-            scores = self.lin_a(log_feats) # (batch_size, num_items)
+            log_feats = self.encoder_a(seqs, poss)
+            scores = self.lin_a(log_feats)[:, -1] # (batch_size, num_items)
         else:
-            log_feats = self.encoder_b(seqs, poss)[:, -1]
-            scores = self.lin_b(log_feats)
+            log_feats = self.encoder_b(seqs, poss)
+            scores = self.lin_b(log_feats)[:, -1]
 
         return scores[:, item_idx]  # extract only scores for candidate items
 
