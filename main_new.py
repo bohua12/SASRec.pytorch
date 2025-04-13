@@ -105,8 +105,8 @@ if __name__ == '__main__':
             
             ## Save model only if either of the Validation Metrics improve (Not training Metrics)
             avg_NDCG = (m_valid[0] + a_valid[0] + b_valid[0]) / 3
-            print(f"Epoch {epoch}, Avg NDCG: {avg_NDCG:.5f}, LR: {trainer.adam_optimizer.param_groups[0]["lr"]}", end="")
-            f.write(f"Epoch {epoch}, Avg NDCG: {avg_NDCG:.5f}, LR: {trainer.adam_optimizer.param_groups[0]["lr"]} ",)
+            print(f"Epoch {epoch}, Avg NDCG: {avg_NDCG:.5f}, LR: {trainer.adam_optimizer.param_groups[0]['lr']}", end="")
+            f.write(f"Epoch {epoch}, Avg NDCG: {avg_NDCG:.5f}, LR: {trainer.adam_optimizer.param_groups[0]['lr']} ",)
             if m_valid[0] > best_m_valid_ndcg or a_valid[0] > best_a_valid_ndcg or b_valid[0] > best_b_valid_ndcg:
                 best_m_valid_ndcg = max(m_valid[0], best_m_valid_ndcg)
                 best_a_valid_ndcg = max(a_valid[0], best_a_valid_ndcg)
