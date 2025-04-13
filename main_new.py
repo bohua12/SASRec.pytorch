@@ -32,7 +32,7 @@ parser.add_argument('--device', default='cuda', type=str)
 #parser.add_argument('--state_dict_path', default=None, type=str)
 parser.add_argument('--weight_decay', default=1e-2, type=float)
 parser.add_argument('--verification_frequency', default=5, type=int)
-parser.add_argument('--early_stopping_patience', default=75, type=int)
+parser.add_argument('--early_stopping_patience', default=50, type=int)
 parser.add_argument('--verbose', default=0, type=int)
 parser.add_argument('--seed', default=1111, type=int)
 
