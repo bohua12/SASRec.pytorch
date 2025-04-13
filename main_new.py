@@ -82,6 +82,7 @@ if __name__ == '__main__':
     t0 = time.time()
     ## Keep track for early stoppage
     epochs_since_improvement = 0
+    best_NDCG = 0
 
     ## Actual Training
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
@@ -93,15 +94,19 @@ if __name__ == '__main__':
         if epoch % args.verification_frequency == 0:
 
             ## Calculate total and current time (for this cuurrent batch of x epoch)
-            t1 = time.time() - t0
-            T += t1
+
             ## Eval test and validation performance
             m_test, a_test, b_test = trainer.run_test(epoch)
             m_valid, a_valid, b_valid = trainer.run_valid(epoch)
+            t1 = time.time() - t0
+            T += t1
             # print('epoch:%d, time taken: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f, validLoss: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)'
             #         % (epoch, t1, t_valid[0], t_valid[1], t_valid[2], t_test[0], t_test[1]))
-            print(f"Epoch {epoch}, Time Taken: {t1}(s)")
+            
             ## Save model only if either of the Validation Metrics improve (Not training Metrics)
+            avg_NDCG = (m_valid[0] + a_valid[0] + b_valid[0]) / 3
+            print(f"Epoch {epoch}, Avg NDCG: {avg_NDCG:.5f}", end="")
+            f.write(f"Epoch {epoch}, Avg NDCG: {avg_NDCG:.5f} ",)
             if m_valid[0] > best_m_valid_ndcg or a_valid[0] > best_a_valid_ndcg or b_valid[0] > best_b_valid_ndcg:
                 best_m_valid_ndcg = max(m_valid[0], best_m_valid_ndcg)
                 best_a_valid_ndcg = max(a_valid[0], best_a_valid_ndcg)
@@ -110,24 +115,30 @@ if __name__ == '__main__':
                 fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
                 fname = fname.format(epoch, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
                 # MODEL SAVING: Next time? torch.save(model.state_dict(), os.path.join(folder, fname))
-                f.write("[BEST]")
-
+                if best_NDCG < avg_NDCG:
+                    best_NDCG = avg_NDCG
+                    f.write("[BEST Avg NDCG]")
+                    print("Best avg NDCG So far!")
+                f.write("\n")
                 epochs_since_improvement = 0
             else:
                 epochs_since_improvement += args.verification_frequency
-                print(f"{epochs_since_improvement} epochs since the last improvement in Validation NDCG/HR")
+                print(f"{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR")
+                f.write(f"{epochs_since_improvement} epochs since the last improvement in any Validation NDCG/HR\n")
+
             # NEW SCHEDULER HERE!
             trainer.scheduler.step(m_valid[0])  # if you're monitoring NDCG
             ## Log results in log.txt
-            f.write(f"{epoch} M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f}) ({float(m_test[0]):.5f}, {m_test[1]:.5f})\n")
-            f.write(f"{epoch} A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f}) ({float(a_test[0]):.5f}, {a_test[1]:.5f})\n")
-            f.write(f"{epoch} B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f}) ({float(b_test[0]):.5f}, {b_test[1]:.5f})\n")
+            f.write("\n")
+            f.write(f"M:({float(m_valid[0]):.5f}, {m_valid[1]:.5f}, {m_valid[2]:.5f}) ({float(m_test[0]):.5f}, {m_test[1]:.5f})\n")
+            f.write(f"A:({float(a_valid[0]):.5f}, {a_valid[1]:.5f}, {a_valid[2]:.5f}) ({float(a_test[0]):.5f}, {a_test[1]:.5f})\n")
+            f.write(f"B:({float(b_valid[0]):.5f}, {b_valid[1]:.5f}, {b_valid[2]:.5f}) ({float(b_test[0]):.5f}, {b_test[1]:.5f})\n")
             f.flush()
 
             ## Activate early stoppage if patience is exceeded
             if epochs_since_improvement >= args.early_stopping_patience:
                 print(f"Early stopping triggered at {epoch} epochs, after {epochs_since_improvement} epochs without improvement in Validaition NDCG/HR.")
-                f.write(str(epoch) + "Early Stopping Triggered" + '\n')
+                f.write(str(epoch) + " Early Stopping Triggered" + '\n')
                 break
             ## Reset timer for next itr of x epochs
             t0 = time.time()
