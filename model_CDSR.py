@@ -80,10 +80,6 @@ class Encoder(torch.nn.Module):
         return self.last_layernorm(seqs)
 
 
-
-# pls use the following self-made multihead attention layer
-# in case your pytorch version is below 1.16 or for other reasons
-# https://github.com/pmixer/TiSASRec.pytorch/blob/master/model.py
 class CDSR(torch.nn.Module):
     def __init__(self, user_num, item_num_m, item_num_a, item_num_b, args):
         super(CDSR, self).__init__()

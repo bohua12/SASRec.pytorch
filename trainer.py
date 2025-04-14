@@ -11,7 +11,6 @@ class Trainer(object):
         ### LOAD DATA ###
         print("Loading data...")
         # Split data into Train/Test/Valid
-        #[self.user_train, self.user_valid, self.user_test, self.n_users, self.n_items] = data_partition(args.dataset)
         [   
         self.user_train_m, self.user_valid_m, self.user_test_m,
         self.user_train_a, self.user_valid_a, self.user_test_a,
@@ -20,13 +19,11 @@ class Trainer(object):
         ] = data_partition("afk", "afk_50_preprocessed.txt", args)
 
         # Get dataloader for training dataset
-        #self.dl = get_dataloader(self.user_train, self.n_users, self.n_items, self.args)
         self.dl = get_dataloader(self.user_train_m, self.user_train_a, self.user_train_b, self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, args)
         print("Data loaded successfully!\n")
 
         # LOAD MODEL
         print("Loading model...")
-        #self.model = SASRec(self.n_users, self.n_items, args).to(args.device)
         self.model = CDSR(self.n_users, self.n_items_m, self.n_items_a, self.n_items_b, self.args).to(args.device)
         # adam moved from later line to here!
         self.adam_optimizer = torch.optim.AdamW(self.model.parameters(), lr=args.lr, betas=(0.9, 0.98), weight_decay=args.weight_decay)
@@ -38,28 +35,23 @@ class Trainer(object):
             verbose=True
         )
 
-        self.bce_loss = torch.nn.BCEWithLogitsLoss() # torch.nn.BCELoss()
+        self.bce_loss = torch.nn.BCEWithLogitsLoss() 
 
         for name, param in self.model.named_parameters():
             try:
                 torch.nn.init.xavier_normal_(param.data)
             except:
-                pass # just ignore those failed init layers
+                pass 
 
         init_weights(self.model)
 
         print("Model loaded successfully!\n")
-
 
  
     def run_epoch(self, i):
         self.model.train()
         self.adam_optimizer.zero_grad()
         epoch_loss = 0
-        # for step, (u, seq, pos, neg) in enumerate(self.dl):
-        #     u, seq, pos, neg = u.numpy(), seq.numpy(), pos.numpy(), neg.numpy()
-        #     #print(seq)
-        #     pos_logits, neg_logits = self.model(u, seq, pos, neg)
 
         for step, batch in enumerate(self.dl):
             current_lr = self.adam_optimizer.param_groups[0]["lr"]
@@ -177,19 +169,19 @@ class Trainer(object):
         if valid_users_m > 0:
             NDCG_m = NDCG_m / valid_users_m
             HT_m = HT_m / valid_users_m
-            rank_m = rank_m / valid_users_m  # Add rank averaging for domain m
+            rank_m = rank_m / valid_users_m
             val_loss_m = val_loss_m / valid_users_m
 
         if valid_users_a > 0:
             NDCG_a = NDCG_a / valid_users_a
             HT_a = HT_a / valid_users_a
-            rank_a = rank_a / valid_users_a  # Add rank averaging for domain a
+            rank_a = rank_a / valid_users_a
             val_loss_a = val_loss_a / valid_users_a
 
         if valid_users_b > 0:
             NDCG_b = NDCG_b / valid_users_b
             HT_b = HT_b / valid_users_b
-            rank_b = rank_b / valid_users_b  # Add rank averaging for domain b
+            rank_b = rank_b / valid_users_b
             val_loss_b = val_loss_b / valid_users_b
                 
         print(f"M: NDCG: {NDCG_m:.4f}, HT: {HT_m:.4f}, avgrank: {rank_m:.4f}, v_loss: {val_loss_m:.4f}")
@@ -210,13 +202,6 @@ class Trainer(object):
         users = range(self.n_users)
 
         for u in users:
-            ## 1) GENERATE SEQUENCE
-            # Reconstruct user sequence from train + valid for all 3 domains
-            # seq[] = train[u] + valid[u] (then we predict test[u])
-
-
-            ## 2) RATE ITEM
-            # Rated and item_idx for m
             if len(self.user_test_m[u]) > 0:
                 seq_m = self.generate_test_sequence(self.user_test_m[u], self.user_train_m[u], self.user_test_m[u], self.args.maxlen).to(self.args.device)
                 possible_negs = np.setdiff1d(np.arange(1, self.n_items_m + 1), set(self.user_train_m[u]))
@@ -268,17 +253,18 @@ class Trainer(object):
         if valid_users_m > 0:
             NDCG_m = NDCG_m / valid_users_m
             HT_m = HT_m / valid_users_m
-            rank_m = rank_m / valid_users_m  # Add rank averaging for domain m
+            rank_m = rank_m / valid_users_m  
 
         if valid_users_a > 0:
             NDCG_a = NDCG_a / valid_users_a
             HT_a = HT_a / valid_users_a
-            rank_a = rank_a / valid_users_a  # Add rank averaging for domain a
+            rank_a = rank_a / valid_users_a  
 
         if valid_users_b > 0:
             NDCG_b = NDCG_b / valid_users_b
             HT_b = HT_b / valid_users_b
-            rank_b = rank_b / valid_users_b  # Add rank averaging for domain b
+            rank_b = rank_b / valid_users_b  
+
         print(f"M: NDCG: {NDCG_m:.4f}, HT: {HT_m:.4f}, avgrank: {rank_m:.4f}")
         print(f"A: NDCG: {NDCG_a:.4f}, HT: {HT_a:.4f}, avgrank: {rank_a:.4f}")
         print(f"B: NDCG: {NDCG_b:.4f}, HT: {HT_b:.4f}, avgrank: {rank_b:.4f}")

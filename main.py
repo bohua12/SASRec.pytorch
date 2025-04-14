@@ -81,8 +81,6 @@ if __name__ == '__main__':
 
     ## Actual Training
     for epoch in range(epoch_start_idx, args.num_epochs + 1):
-        # HI CONSIDER ADDING scheduling here: lr_cur = trainer.optimizer.param_groups[0]["lr"]
-
         epoch_train_loss = trainer.run_epoch(epoch)
 
         ## Every 5 (by default) epoch, evaluate and save the model
@@ -106,9 +104,6 @@ if __name__ == '__main__':
                 best_m_valid_ndcg = max(m_valid[0], best_m_valid_ndcg)
                 best_a_valid_ndcg = max(a_valid[0], best_a_valid_ndcg)
                 best_b_valid_ndcg = max(b_valid[0], best_b_valid_ndcg)
-                folder = args.dataset + '_' + args.train_dir
-                fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
-                fname = fname.format(epoch, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
                 # MODEL SAVING: Next time? torch.save(model.state_dict(), os.path.join(folder, fname))
                 if best_NDCG < avg_NDCG:
                     best_NDCG = avg_NDCG
@@ -141,10 +136,7 @@ if __name__ == '__main__':
             
         # Close and save once reach desired number of epochs
         if epoch == args.num_epochs:
-            folder = args.dataset + '_' + args.train_dir
-            fname = 'SASRec.epoch={}.lr={}.layer={}.head={}.hidden={}.maxlen={}.pth'
-            fname = fname.format(args.num_epochs, args.lr, args.num_blocks, args.num_heads, args.hidden_units, args.maxlen)
+            f.write(str(epoch) + " Max number of epoch reached" + '\n')
             # MODEL SAVING: Next time? torch.save(model.state_dict(), os.path.join(folder, fname))
-
     f.close()
     print("Done")
