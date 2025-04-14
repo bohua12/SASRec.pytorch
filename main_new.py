@@ -2,11 +2,9 @@ import os
 import time
 import torch
 import argparse
-from torch.utils.data import DataLoader
 import random
 import numpy as np
 
-from model import SASRec, init_weights
 from utils import *
 from trainer import Trainer
 def str2bool(s):
@@ -26,10 +24,7 @@ parser.add_argument('--num_blocks', default=2, type=int)
 parser.add_argument('--num_epochs', default=1000, type=int)
 parser.add_argument('--num_heads', default=1, type=int)
 parser.add_argument('--dropout_rate', default=0.1, type=float)
-#parser.add_argument('--l2_emb', default=0.0, type=float)
 parser.add_argument('--device', default='cuda', type=str)
-#parser.add_argument('--inference_only', default=False, type=str2bool)
-#parser.add_argument('--state_dict_path', default=None, type=str)
 parser.add_argument('--weight_decay', default=1e-2, type=float)
 parser.add_argument('--verification_frequency', default=5, type=int)
 parser.add_argument('--early_stopping_patience', default=50, type=int)
